@@ -1,0 +1,32 @@
+import dotenv from "dotenv";
+dotenv.config();
+
+const PORT = process.env.USER_SERVICE_PORT || 3001;
+const SERVICE_NAME = "user-service";
+
+const CLIENT_URL = process.env.CLIENT_URL || "";
+const SECRET_VERIFY_EMAIL = process.env.SECRET_VERIFY_EMAIL || "";
+const JWT_SECRET_ACCESS = process.env.JWT_SECRET_ACCESS || "";
+
+const AUTH_EMAIL = process.env.AUTH_EMAIL || "";
+const AUTH_PASS = process.env.AUTH_PASS || "";
+
+const EXPIRES_IN_ACCESS_TOKEN = process.env.EXPIRES_IN_ACCESS_TOKEN || "";
+
+export const DB_NAME = process.env.DB_NAME || "kabi_user";
+export const DB_USERNAME = process.env.DB_USERNAME || "root";
+export const DB_PASSWORD = process.env.DB_PASSWORD || "root_password";
+export const DB_HOST = process.env.DB_HOST || "localhost";
+export const DB_PORT = process.env.DB_PORT || "3306";
+export const NODE_ENV = process.env.NODE_ENV || "development";
+
+export {
+  PORT,
+  SERVICE_NAME,
+  CLIENT_URL,
+  SECRET_VERIFY_EMAIL,
+  JWT_SECRET_ACCESS,
+  AUTH_EMAIL,
+  AUTH_PASS,
+  EXPIRES_IN_ACCESS_TOKEN,
+};

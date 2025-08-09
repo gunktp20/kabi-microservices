@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kabi Real-time Test Client</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .container { max-width: 800px; margin: 0 auto; }
+        .section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+        button { margin: 5px; padding: 8px 15px; }
+        input, textarea { margin: 5px; padding: 5px; }
+        .log { background: #f5f5f5; padding: 10px; height: 200px; overflow-y: scroll; font-family: monospace; }
+        .connected { color: green; }
+        .disconnected { color: red; }
+        .error { color: red; }
+        .info { color: blue; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔥 Kabi Real-time Test Client</h1>
+        
+        <div class="section">
+            <h3>Connection</h3>
+            <input type="text" id="token" placeholder="JWT Token" style="width: 300px;">
+            <button onclick="connect()">Connect</button>
+            <button onclick="disconnect()">Disconnect</button>
+            <span id="status" class="disconnected">Disconnected</span>
+        </div>
+
+        <div class="section">
+            <h3>Board Operations</h3>
+            <input type="text" id="boardId" placeholder="Board ID" value="board_123">
+            <button onclick="joinBoard()">Join Board</button>
+            <button onclick="leaveBoard()">Leave Board</button>
+            <button onclick="sendBoardUpdate()">Send Board Update</button>
+        </div>
+
+        <div class="section">
+            <h3>Task Operations</h3>
+            <input type="text" id="taskId" placeholder="Task ID" value="task_456">
+            <select id="taskAction">
+                <option value="created">Created</option>
+                <option value="updated">Updated</option>
+                <option value="deleted">Deleted</option>
+                <option value="moved">Moved</option>
+            </select>
+            <button onclick="sendTaskUpdate()">Send Task Update</button>
+        </div>
+
+        <div class="section">
+            <h3>Notifications</h3>
+            <input type="text" id="targetUserId" placeholder="Target User ID">
+            <input type="text" id="notificationTitle" placeholder="Title" value="Test Notification">
+            <textarea id="notificationMessage" placeholder="Message">This is a test notification</textarea>
+            <button onclick="sendNotification()">Send Notification</button>
+            <button onclick="broadcastNotification()">Broadcast to Board</button>
+        </div>
+
+        <div class="section">
+            <h3>Event Log</h3>
+            <button onclick="clearLog()">Clear Log</button>
+            <div id="log" class="log"></div>
+        </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        let socket = null;
+
+        function log(message, type = 'info') {
+            const logDiv = document.getElementById('log');
+            const time = new Date().toLocaleTimeString();
+            const className = type === 'error' ? 'error' : (type === 'success' ? 'connected' : 'info');
+            logDiv.innerHTML += `<div class="${className}">[${time}] ${message}</div>`;
+            logDiv.scrollTop = logDiv.scrollHeight;
+        }
+
+        function updateStatus(connected) {
+            const status = document.getElementById('status');
+            if (connected) {
+                status.textContent = 'Connected';
+                status.className = 'connected';
+            } else {
+                status.textContent = 'Disconnected';
+                status.className = 'disconnected';
+            }
+        }
+
+        function connect() {
+            const token = document.getElementById('token').value;
+            if (!token) {
+                alert('Please enter a JWT token');
+                return;
+            }
+
+            socket = io('http://localhost:3000', {
+                auth: {
+                    token: token
+                },
+                transports: ['websocket', 'polling']
+            });
+
+            socket.on('connect', () => {
+                log('Connected to server', 'success');
+                updateStatus(true);
+            });
+
+            socket.on('disconnect', (reason) => {
+                log(`Disconnected: ${reason}`, 'error');
+                updateStatus(false);
+            });
+
+            socket.on('connected', (data) => {
+                log(`Welcome message: ${JSON.stringify(data)}`, 'success');
+            });
+
+            socket.on('error', (data) => {
+                log(`Error: ${JSON.stringify(data)}`, 'error');
+            });
+
+            // Board events
+            socket.on('board:user_joined', (data) => {
+                log(`User joined board: ${JSON.stringify(data)}`, 'info');
+            });
+
+            socket.on('board:user_left', (data) => {
+                log(`User left board: ${JSON.stringify(data)}`, 'info');
+            });
+
+            socket.on('board:users_list', (data) => {
+                log(`Board users: ${JSON.stringify(data)}`, 'info');
+            });
+
+            socket.on('board:updated', (data) => {
+                log(`Board updated: ${JSON.stringify(data)}`, 'info');
+            });
+
+            // Task events
+            socket.on('task:updated', (data) => {
+                log(`Task updated: ${JSON.stringify(data)}`, 'info');
+            });
+
+            socket.on('task:assigned', (data) => {
+                log(`Task assigned: ${JSON.stringify(data)}`, 'info');
+            });
+
+            socket.on('task:reordered', (data) => {
+                log(`Tasks reordered: ${JSON.stringify(data)}`, 'info');
+            });
+
+            // Notification events
+            socket.on('notification:received', (data) => {
+                log(`Notification received: ${JSON.stringify(data)}`, 'success');
+            });
+
+            // User events
+            socket.on('user:online', (data) => {
+                log(`User online: ${JSON.stringify(data)}`, 'info');
+            });
+
+            socket.on('user:offline', (data) => {
+                log(`User offline: ${JSON.stringify(data)}`, 'info');
+            });
+
+            socket.on('pong', (data) => {
+                log(`Pong received: ${JSON.stringify(data)}`, 'info');
+            });
+        }
+
+        function disconnect() {
+            if (socket) {
+                socket.disconnect();
+                socket = null;
+                updateStatus(false);
+            }
+        }
+
+        function joinBoard() {
+            if (!socket) {
+                alert('Not connected');
+                return;
+            }
+            const boardId = document.getElementById('boardId').value;
+            socket.emit('board:join', { boardId });
+            log(`Joining board: ${boardId}`, 'info');
+        }
+
+        function leaveBoard() {
+            if (!socket) {
+                alert('Not connected');
+                return;
+            }
+            const boardId = document.getElementById('boardId').value;
+            socket.emit('board:leave', { boardId });
+            log(`Leaving board: ${boardId}`, 'info');
+        }
+
+        function sendBoardUpdate() {
+            if (!socket) {
+                alert('Not connected');
+                return;
+            }
+            const boardId = document.getElementById('boardId').value;
+            socket.emit('board:updated', {
+                boardId,
+                changes: { name: 'Updated Board Name', description: 'Updated description' }
+            });
+            log(`Sent board update for: ${boardId}`, 'info');
+        }
+
+        function sendTaskUpdate() {
+            if (!socket) {
+                alert('Not connected');
+                return;
+            }
+            const boardId = document.getElementById('boardId').value;
+            const taskId = document.getElementById('taskId').value;
+            const action = document.getElementById('taskAction').value;
+            
+            socket.emit('task:updated', {
+                boardId,
+                taskId,
+                action,
+                task: { id: taskId, description: 'Updated task description' }
+            });
+            log(`Sent task ${action} for: ${taskId}`, 'info');
+        }
+
+        function sendNotification() {
+            if (!socket) {
+                alert('Not connected');
+                return;
+            }
+            const targetUserId = document.getElementById('targetUserId').value;
+            const title = document.getElementById('notificationTitle').value;
+            const message = document.getElementById('notificationMessage').value;
+
+            socket.emit('notification:send', {
+                targetUserId,
+                type: 'info',
+                title,
+                message
+            });
+            log(`Sent notification to user: ${targetUserId}`, 'info');
+        }
+
+        function broadcastNotification() {
+            if (!socket) {
+                alert('Not connected');
+                return;
+            }
+            const boardId = document.getElementById('boardId').value;
+            const title = document.getElementById('notificationTitle').value;
+            const message = document.getElementById('notificationMessage').value;
+
+            socket.emit('notification:broadcast', {
+                boardId,
+                type: 'info',
+                title,
+                message
+            });
+            log(`Broadcast notification to board: ${boardId}`, 'info');
+        }
+
+        function clearLog() {
+            document.getElementById('log').innerHTML = '';
+        }
+
+        // Send ping every 30 seconds
+        setInterval(() => {
+            if (socket && socket.connected) {
+                socket.emit('ping');
+            }
+        }, 30000);
+    </script>
+</body>
+</html>
