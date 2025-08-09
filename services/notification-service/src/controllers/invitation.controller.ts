@@ -6,7 +6,6 @@ import {
   UnAuthenticatedError,
 } from "../errors";
 import Invitation from "../models/Invitation";
-import BoardMembers from "../models/BoardMembers";
 import "express-async-errors";
 import axios from "axios";
 import {
@@ -125,7 +124,8 @@ const acceptInvitation = async (req: Request, res: Response) => {
       }
     });
   } catch (error) {
-    await BoardMembers.create({ user_id: req.user?.userId, board_id });
+    console.error("Failed to add user to board:", error);
+    throw new BadRequestError("Failed to accept invitation - could not add user to board");
   }
 
   await invitation.save();

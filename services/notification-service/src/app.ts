@@ -10,9 +10,10 @@ import notFound from "./middlewares/not-found";
 
 import notificationRoutes from "./routes/notification.route";
 import invitationRoutes from "./routes/invitation.route";
+import assignmentRoutes from "./routes/assignment.route";
 
-import Invitation from "./models/Invitation";
-import BoardMembers from "./models/BoardMembers";
+// import Invitation from "./models/Invitation";
+// import Assignment from "./models/Assignment";
 
 const app = express();
 
@@ -33,6 +34,7 @@ app.get("/health", (req, res) => {
 
 app.use("/api/v1/notifications", notificationRoutes);
 app.use("/api/v1/invitations", invitationRoutes);
+app.use("/api/v1/assignments", assignmentRoutes);
 
 app.use(notFound);
 app.use(errorHandlerMiddleware);

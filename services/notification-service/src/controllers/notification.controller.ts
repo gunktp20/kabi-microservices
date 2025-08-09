@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { StatusCodes } from "http-status-codes";
 import Invitation from "../models/Invitation";
+import Assignment from "../models/Assignment";
 import { BadRequestError } from "../errors";
 import axios from "axios";
 import {
@@ -30,17 +31,20 @@ const getAllNotifications = async (req: Request, res: Response) => {
       },
     });
 
-    const assignmentsResponse = await axios.get(
-      `${TASK_SERVICE_URL}/api/v1/assignments`,
-      {
-        headers: {
-          Authorization: req.headers.authorization
-        }
-      }
-    );
-    const assignments = assignmentsResponse.data.assignments;
+    const assignments = await Assignment.findAll({
+      where: {
+        assignee_id: req?.user.userId,
+      },
+      attributes: ["id", "createdAt", "task_id", "board_id", "sender_id", "assignee_id", "seen"],
+      order: [["createdAt", "DESC"]],
+    });
 
-    const unreadAssignments = assignments.filter((assignment: any) => !assignment.seen);
+    const unreadAssignments = await Assignment.findAll({
+      where: {
+        seen: false,
+        assignee_id: req.user?.userId,
+      },
+    });
 
     const enrichedInvitations = await Promise.all(
       invitations.map(async (invitation) => {
@@ -70,9 +74,44 @@ const getAllNotifications = async (req: Request, res: Response) => {
       })
     );
 
+    const enrichedAssignments = await Promise.all(
+      assignments.map(async (assignment) => {
+        try {
+          const [senderResponse, assigneeResponse, taskResponse] = await Promise.all([
+            axios.get(`${USER_SERVICE_URL}/api/v1/users/${assignment.sender_id}`, {
+              headers: { Authorization: req.headers.authorization }
+            }),
+            axios.get(`${USER_SERVICE_URL}/api/v1/users/${assignment.assignee_id}`, {
+              headers: { Authorization: req.headers.authorization }
+            }),
+            axios.get(`${TASK_SERVICE_URL}/api/v1/tasks/${assignment.task_id}`, {
+              headers: { Authorization: req.headers.authorization }
+            })
+          ]);
+
+          const boardResponse = await axios.get(`${BOARD_SERVICE_URL}/api/v1/boards/${assignment.board_id}`, {
+            headers: { Authorization: req.headers.authorization }
+          });
+
+          return {
+            ...assignment.toJSON(),
+            sender: senderResponse.data.user,
+            assignee: assigneeResponse.data.user,
+            task: {
+              ...taskResponse.data.task,
+              Board: boardResponse.data.board
+            }
+          };
+        } catch (error) {
+          console.error("Error enriching assignment:", error);
+          return assignment.toJSON();
+        }
+      })
+    );
+
     res.status(StatusCodes.OK).json({
       invitations: enrichedInvitations,
-      assignments,
+      assignments: enrichedAssignments,
       unreadInvitations: unreadInvitations.length,
       unreadAssignments: unreadAssignments.length,
       unreadNotifications: unreadInvitations.length + unreadAssignments.length,

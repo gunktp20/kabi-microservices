@@ -64,7 +64,7 @@ export const ROUTES = [
   },
   {
     path: '/api/v1/assignments',
-    target: SERVICES.TASK_SERVICE.url,
+    target: SERVICES.NOTIFICATION_SERVICE.url,
     pathRewrite: {
       '^/api/v1/assignments': '/api/v1/assignments'
     }

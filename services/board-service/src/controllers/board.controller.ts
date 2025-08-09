@@ -165,10 +165,40 @@ const deleteBoardById = async (req: Request, res: Response) => {
   res.status(StatusCodes.OK).json({ msg: "Deleted your board" });
 };
 
+const addBoardMember = async (req: Request, res: Response) => {
+  const { user_id } = req.body;
+  const { board_id } = req.params;
+
+  if (!user_id || !board_id) {
+    throw new BadRequestError("Please provide user_id and board_id");
+  }
+
+  const board = await Board.findOne({
+    where: { id: board_id }
+  });
+
+  if (!board) {
+    throw new NotFoundError("Board not found");
+  }
+
+  const existingMember = await BoardMembers.findOne({
+    where: { user_id, board_id }
+  });
+
+  if (existingMember) {
+    return res.status(StatusCodes.OK).json({ msg: "User is already a member of this board" });
+  }
+
+  await BoardMembers.create({ user_id, board_id });
+
+  res.status(StatusCodes.OK).json({ msg: "User added to board successfully" });
+};
+
 export {
   createBoard,
   getAllBoards,
   getBoardById,
   updateBoardById,
   deleteBoardById,
+  addBoardMember,
 };

@@ -5,6 +5,7 @@ import {
   getBoardById,
   updateBoardById,
   deleteBoardById,
+  addBoardMember,
 } from "../controllers/board.controller";
 import { authenticateUser } from "../middlewares/auth";
 
@@ -20,5 +21,8 @@ router.route("/:board_id")
   .get(getBoardById)
   .patch(updateBoardById)
   .delete(deleteBoardById);
+
+router.route("/:board_id/members")
+  .post(addBoardMember);
 
 export default router;

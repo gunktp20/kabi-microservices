@@ -3,7 +3,7 @@ dotenv.config();
 
 export const PORT = process.env.NOTIFICATION_SERVICE_PORT || 3005;
 export const DB_NAME = process.env.DB_NAME || "kabi_db";
-export const DB_USERNAME = process.env.DB_USERNAME || "postgres";
+export const DB_USERNAME = process.env.DB_USERNAME || "root";
 export const DB_PASSWORD = process.env.DB_PASSWORD || "password";
 export const DB_HOST = process.env.DB_HOST || "localhost";
 export const DB_PORT = process.env.DB_PORT || "5432";

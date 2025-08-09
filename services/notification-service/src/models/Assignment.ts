@@ -1,38 +1,38 @@
 import { DataTypes, Model, Optional } from "sequelize";
 import sequelize from "../db/connection";
 
-interface InvitationAttributes {
+interface AssignmentAttributes {
   id: string;
-  recipient_id: string;
+  assignee_id: string;
   sender_id: string;
-  status?: string;
+  task_id: string;
   board_id: string;
   seen?: boolean;
 }
 
-interface InvitationCreationAttributes
-  extends Optional<InvitationAttributes, "id"> {}
+interface AssignmentCreationAttributes
+  extends Optional<AssignmentAttributes, "id"> {}
 
-class Invitation
-  extends Model<InvitationAttributes, InvitationCreationAttributes>
-  implements InvitationAttributes
+class Assignment
+  extends Model<AssignmentAttributes, AssignmentCreationAttributes>
+  implements AssignmentAttributes
 {
   public id!: string;
-  public recipient_id!: string;
+  public assignee_id!: string;
   public sender_id!: string;
-  public status!: string;
+  public task_id!: string;
   public board_id!: string;
   public seen!: boolean;
 }
 
-Invitation.init(
+Assignment.init(
   {
     id: {
       type: DataTypes.UUID,
       defaultValue: DataTypes.UUIDV4,
       primaryKey: true,
     },
-    recipient_id: {
+    assignee_id: {
       type: DataTypes.UUID,
       allowNull: false,
     },
@@ -40,11 +40,9 @@ Invitation.init(
       type: DataTypes.UUID,
       allowNull: false,
     },
-    status: {
-      type: DataTypes.ENUM({
-        values: ["pending", "accepted", "declined"],
-      }),
-      defaultValue: "pending",
+    task_id: {
+      type: DataTypes.UUID,
+      allowNull: false,
     },
     board_id: {
       type: DataTypes.UUID,
@@ -58,9 +56,17 @@ Invitation.init(
   },
   {
     sequelize,
-    modelName: "invitations",
+    modelName: "assignment",
     timestamps: true,
   }
 );
 
-export default Invitation;
+Assignment.sync({ force: false })
+  .then(async () => {
+    console.log("Assignment table was created !");
+  })
+  .catch((err) => {
+    console.log(err);
+  });
+
+export default Assignment;
