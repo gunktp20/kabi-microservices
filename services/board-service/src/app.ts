@@ -11,14 +11,8 @@ import notFound from "./middlewares/not-found";
 import boardRoutes from "./routes/board.route";
 import columnRoutes from "./routes/column.route";
 
-import Board from "./models/Board";
-import Column from "./models/Column";
-import BoardMembers from "./models/BoardMembers";
-
-Board.hasMany(Column, { foreignKey: "board_id", sourceKey: "id" });
-Column.belongsTo(Board, { foreignKey: "board_id" });
-Board.hasMany(BoardMembers, { foreignKey: "board_id" });
-BoardMembers.belongsTo(Board, { foreignKey: "board_id" });
+// Import models with associations initialized
+import "./models/associations";
 
 const app = express();
 

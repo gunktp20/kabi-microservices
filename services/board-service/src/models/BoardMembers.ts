@@ -1,5 +1,6 @@
 import { DataTypes, Model, Optional } from "sequelize";
 import sequelize from "../db/connection";
+import Board from "./Board";
 
 interface BoardMembersAttributes {
   id: string;
@@ -32,6 +33,10 @@ BoardMembers.init(
     board_id: {
       type: DataTypes.UUID,
       allowNull: false,
+      references: {
+        model: Board,
+        key: "id",
+      },
     },
   },
   {
@@ -40,5 +45,6 @@ BoardMembers.init(
     timestamps: false,
   }
 );
+
 
 export default BoardMembers;

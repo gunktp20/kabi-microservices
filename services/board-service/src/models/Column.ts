@@ -1,5 +1,6 @@
 import { DataTypes, Model, Optional } from "sequelize";
 import sequelize from "../db/connection";
+import Board from "./Board";
 
 interface ColumnAttributes {
   id: string;
@@ -34,6 +35,10 @@ Column.init(
     board_id: {
       type: DataTypes.UUID,
       allowNull: false,
+      references: {
+        model: Board,
+        key: "id",
+      },
     },
     sequence: {
       type: DataTypes.INTEGER,
@@ -54,5 +59,6 @@ Column.init(
     },
   }
 );
+
 
 export default Column;
