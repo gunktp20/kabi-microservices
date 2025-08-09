@@ -26,7 +26,7 @@ export const authenticateUser = async (
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
     throw new UnAuthenticatedError("Authentication Invalid");
   }
-
+ 
   const token = authHeader.split(" ")[1];
 
   try {

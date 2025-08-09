@@ -4,7 +4,7 @@ import cors from "cors";
 import helmet from "helmet";
 import rateLimit from "express-rate-limit";
 import { PORT } from "./config/application.config";
-import sequelize from "./config/database";
+import sequelize from "./db/connection";
 import errorHandlerMiddleware from "./middlewares/error-handler";
 import notFound from "./middlewares/not-found";
 
