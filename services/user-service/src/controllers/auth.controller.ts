@@ -18,7 +18,7 @@ import jwt, {
 import {
   SECRET_VERIFY_EMAIL,
   CLIENT_URL,
-  JWT_SECRET_ACCESS,
+  JWT_PRIVATE_KEY,
   JWT_SECRET_REFRESH,
   EXPIRES_IN_ACCESS_TOKEN,
   EXPIRES_IN_REFRESH_TOKEN,
@@ -39,8 +39,11 @@ interface IJwtPayload extends JwtPayload {
 const generateTokens = async (userId: string, email: string) => {
   const accessToken = jwt.sign(
     { userId, email },
-    JWT_SECRET_ACCESS,
-    { expiresIn: EXPIRES_IN_ACCESS_TOKEN } as SignOptions
+    JWT_PRIVATE_KEY,
+    { 
+      expiresIn: EXPIRES_IN_ACCESS_TOKEN,
+      algorithm: 'RS256'
+    } as SignOptions
   );
 
   const refreshToken = jwt.sign(
@@ -239,7 +242,7 @@ const verifyAccessToken = async (req: Request, res: Response) => {
   }
   const accessToken = authHeader.split(" ")[1];
   try {
-    const decoded = (await jwt.verify(accessToken, JWT_SECRET_ACCESS)) as any;
+    const decoded = (await jwt.verify(accessToken, JWT_PRIVATE_KEY, { algorithms: ['RS256'] })) as any;
     return res.status(StatusCodes.OK).json({
       success: true,
       data: {

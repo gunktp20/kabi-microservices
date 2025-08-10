@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import jwt, { JwtPayload } from "jsonwebtoken";
-import { JWT_SECRET_ACCESS } from "../config/application.config";
+import { JWT_PUBLIC_KEY } from "../config/application.config";
 import { UnAuthenticatedError } from "../errors";
 
 interface AuthenticatedUser {
@@ -30,7 +30,7 @@ export const authenticateUser = async (
   const token = authHeader.split(" ")[1];
 
   try {
-    const payload = jwt.verify(token, JWT_SECRET_ACCESS) as JwtPayload & AuthenticatedUser;
+    const payload = jwt.verify(token, JWT_PUBLIC_KEY, { algorithms: ['RS256'] }) as JwtPayload & AuthenticatedUser;
     req.user = { userId: payload.userId, email: payload.email };
     next();
   } catch (error) {

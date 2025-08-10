@@ -1,4 +1,6 @@
 import dotenv from "dotenv";
+import fs from "fs";
+import path from "path";
 dotenv.config();
 
 const PORT = process.env.USER_SERVICE_PORT || 3001;
@@ -6,7 +8,9 @@ const SERVICE_NAME = "user-service";
 
 const CLIENT_URL = process.env.CLIENT_URL || "";
 const SECRET_VERIFY_EMAIL = process.env.SECRET_VERIFY_EMAIL || "";
-const JWT_SECRET_ACCESS = process.env.JWT_SECRET_ACCESS || "";
+// Load RSA private key for signing JWTs
+const JWT_PRIVATE_KEY = process.env.JWT_PRIVATE_KEY || 
+  fs.readFileSync(path.join(__dirname, '../../../keys/private_key.pem'), 'utf8');
 
 const AUTH_EMAIL = process.env.AUTH_EMAIL || "";
 const AUTH_PASS = process.env.AUTH_PASS || "";
@@ -27,7 +31,7 @@ export {
   SERVICE_NAME,
   CLIENT_URL,
   SECRET_VERIFY_EMAIL,
-  JWT_SECRET_ACCESS,
+  JWT_PRIVATE_KEY,
   JWT_SECRET_REFRESH,
   AUTH_EMAIL, 
   AUTH_PASS,
