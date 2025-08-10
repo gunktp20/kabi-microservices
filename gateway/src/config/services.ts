@@ -16,12 +16,12 @@ export const SERVICES = {
   },
   NOTIFICATION_SERVICE: {
     name: 'notification-service',
-    url: process.env.NOTIFICATION_SERVICE_URL || 'http://localhost:3005',
+    url: process.env.NOTIFICATION_SERVICE_URL || 'http://localhost:3004',
     healthCheck: '/health'
   },
   REALTIME_SERVICE: {
     name: 'realtime-service',
-    url: process.env.REALTIME_SERVICE_URL || 'http://localhost:3004',
+    url: process.env.REALTIME_SERVICE_URL || 'http://localhost:3005',
     healthCheck: '/health'
   }
 };

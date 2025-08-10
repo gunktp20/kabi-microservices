@@ -12,6 +12,7 @@ import {
 import jwt, {
   JsonWebTokenError,
   JwtPayload,
+  SignOptions,
   TokenExpiredError,
 } from "jsonwebtoken";
 import {
@@ -39,13 +40,13 @@ const generateTokens = async (userId: string, email: string) => {
   const accessToken = jwt.sign(
     { userId, email },
     JWT_SECRET_ACCESS,
-    { expiresIn: EXPIRES_IN_ACCESS_TOKEN }
+    { expiresIn: EXPIRES_IN_ACCESS_TOKEN } as SignOptions
   );
 
   const refreshToken = jwt.sign(
     { userId, email, type: 'refresh' },
     JWT_SECRET_REFRESH,
-    { expiresIn: EXPIRES_IN_REFRESH_TOKEN }
+    { expiresIn: EXPIRES_IN_REFRESH_TOKEN } as SignOptions
   );
 
   // Calculate expiry date
@@ -269,7 +270,7 @@ const getUserProfile = async (req: Request, res: Response) => {
 };
 
 const refreshToken = async (req: Request, res: Response) => {
-  const { refreshToken: token } = req.body;
+  const { refresh_token: token } = req.body;
 
   if (!token) {
     throw new BadRequestError("Refresh token is required");
