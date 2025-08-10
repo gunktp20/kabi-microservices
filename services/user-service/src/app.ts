@@ -35,8 +35,8 @@ app.get("/health", (req: Request, res: Response) => {
   });
 });
 
-app.use("/api/v1/auth", authRouter);
-app.use("/api/v1/users", userRouter);
+app.use("/api/auth", authRouter);
+app.use("/api/users", userRouter);
 
 app.use(notFound);
 app.use(errorHandler);

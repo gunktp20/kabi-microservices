@@ -11,7 +11,7 @@ class BoardService {
   async checkBoardMembership(boardId: string, userId: string, authorization?: string) {
     try {
       const response = await this.httpClient.get(
-        `/api/v1/boards/${boardId}/members/${userId}`,
+        `/api/boards/${boardId}/members/${userId}`,
         {
           headers: {
             Authorization: authorization || '',
@@ -30,7 +30,7 @@ class BoardService {
   async getBoardMembers(boardId: string, authorization?: string) {
     try {
       const response = await this.httpClient.get(
-        `/api/v1/boards/${boardId}/members`,
+        `/api/boards/${boardId}/members`,
         {
           headers: {
             Authorization: authorization || '',
@@ -46,7 +46,7 @@ class BoardService {
   async getBoardById(boardId: string, authorization?: string) {
     try {
       const response = await this.httpClient.get(
-        `/api/v1/boards/${boardId}`,
+        `/api/boards/${boardId}`,
         {
           headers: {
             Authorization: authorization || '',

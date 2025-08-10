@@ -34,6 +34,8 @@ export const authenticateUser = async (
     req.user = { userId: payload.userId, email: payload.email };
     next();
   } catch (error) {
+
+    console.log("ERR : " , error)
     throw new UnAuthenticatedError("Authentication Invalid");
   }
 };

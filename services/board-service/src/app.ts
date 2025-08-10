@@ -31,8 +31,8 @@ app.get("/health", (req, res) => {
   res.status(200).json({ status: "OK", service: "board-service" });
 });
 
-app.use("/api/v1/boards", boardRoutes);
-app.use("/api/v1/columns", columnRoutes);
+app.use("/api/boards", boardRoutes);
+app.use("/api/columns", columnRoutes);
 
 app.use(notFound);
 app.use(errorHandlerMiddleware);

@@ -1,7 +1,7 @@
 import dotenv from "dotenv";
 dotenv.config();
 
-export const PORT = process.env.NOTIFICATION_SERVICE_PORT || 3005;
+export const PORT = process.env.NOTIFICATION_SERVICE_PORT || 3004;
 export const DB_NAME = process.env.DB_NAME || "kabi_db";
 export const DB_USERNAME = process.env.DB_USERNAME || "root";
 export const DB_PASSWORD = process.env.DB_PASSWORD || "password";

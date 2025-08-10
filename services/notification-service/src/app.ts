@@ -32,9 +32,9 @@ app.get("/health", (req, res) => {
   res.status(200).json({ status: "OK", service: "notification-service" });
 });
 
-app.use("/api/v1/notifications", notificationRoutes);
-app.use("/api/v1/invitations", invitationRoutes);
-app.use("/api/v1/assignments", assignmentRoutes);
+app.use("/api/notifications", notificationRoutes);
+app.use("/api/invitations", invitationRoutes);
+app.use("/api/assignments", assignmentRoutes);
 
 app.use(notFound);
 app.use(errorHandlerMiddleware);

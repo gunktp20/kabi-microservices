@@ -18,18 +18,63 @@ import {
   SECRET_VERIFY_EMAIL,
   CLIENT_URL,
   JWT_SECRET_ACCESS,
+  JWT_SECRET_REFRESH,
   EXPIRES_IN_ACCESS_TOKEN,
+  EXPIRES_IN_REFRESH_TOKEN,
   AUTH_EMAIL,
 } from "../config/application.config";
 import { FORM_VERIFY_EMAIL } from "../utils/emailVerification";
 import transporter from "../utils/transporter";
 import User from "../models/User";
+import RefreshToken from "../models/RefreshToken";
 import "express-async-errors";
 import bcrypt from "bcrypt";
 
 interface IJwtPayload extends JwtPayload {
   email: string;
 }
+
+// Helper functions for token management
+const generateTokens = async (userId: string, email: string) => {
+  const accessToken = jwt.sign(
+    { userId, email },
+    JWT_SECRET_ACCESS,
+    { expiresIn: EXPIRES_IN_ACCESS_TOKEN }
+  );
+
+  const refreshToken = jwt.sign(
+    { userId, email, type: 'refresh' },
+    JWT_SECRET_REFRESH,
+    { expiresIn: EXPIRES_IN_REFRESH_TOKEN }
+  );
+
+  // Calculate expiry date
+  const expiresAt = new Date();
+  const refreshTokenExpiry = EXPIRES_IN_REFRESH_TOKEN;
+  if (refreshTokenExpiry.endsWith('d')) {
+    const days = parseInt(refreshTokenExpiry.slice(0, -1));
+    expiresAt.setDate(expiresAt.getDate() + days);
+  } else if (refreshTokenExpiry.endsWith('h')) {
+    const hours = parseInt(refreshTokenExpiry.slice(0, -1));
+    expiresAt.setHours(expiresAt.getHours() + hours);
+  }
+
+  // Store refresh token in database
+  await RefreshToken.create({
+    user_id: userId,
+    token: refreshToken,
+    expires_at: expiresAt
+  });
+
+  return { accessToken, refreshToken };
+};
+
+const revokeUserTokens = async (userId: string) => {
+  await RefreshToken.update(
+    { revoked: true, revoked_at: new Date() },
+    { where: { user_id: userId, revoked: false } }
+  );
+};
 
 const register = async (req: Request, res: Response) => {
   const { email, password } = req.body;
@@ -129,22 +174,17 @@ const login = async (req: Request, res: Response) => {
     throw new UnAuthenticatedError("Please verify your e-mail before");
   }
 
-  // @ts-ignore
-  const accessToken = await jwt.sign(
-    {
-      userId: user.id,
-      email,
-    },
-    JWT_SECRET_ACCESS,
-    {
-      expiresIn: EXPIRES_IN_ACCESS_TOKEN,
-    }
-  );
+  // Revoke existing refresh tokens for this user
+  await revokeUserTokens(user.id);
+
+  // Generate new tokens
+  const { accessToken, refreshToken } = await generateTokens(user.id, email);
 
   res.status(StatusCodes.OK).json({
     success: true,
     data: {
       accessToken,
+      refreshToken,
       user: {
         userId: user.id,
         email,
@@ -228,10 +268,107 @@ const getUserProfile = async (req: Request, res: Response) => {
   });
 };
 
+const refreshToken = async (req: Request, res: Response) => {
+  const { refreshToken: token } = req.body;
+
+  if (!token) {
+    throw new BadRequestError("Refresh token is required");
+  }
+
+  try {
+    // Verify refresh token
+    const decoded = jwt.verify(token, JWT_SECRET_REFRESH) as IJwtPayload & { type: string };
+    
+    if (decoded.type !== 'refresh') {
+      throw new UnAuthenticatedError("Invalid token type");
+    }
+
+    // Check if token exists in database and is not revoked
+    const storedToken = await RefreshToken.findOne({
+      where: { 
+        token,
+        user_id: decoded.userId,
+        revoked: false
+      }
+    });
+
+    if (!storedToken) {
+      throw new UnAuthenticatedError("Refresh token is invalid or expired");
+    }
+
+    // Check if token is expired
+    if (storedToken.expires_at < new Date()) {
+      throw new UnAuthenticatedError("Refresh token has expired");
+    }
+
+    // Get user
+    const user = await User.findByPk(decoded.userId);
+    if (!user) {
+      throw new UnAuthenticatedError("User not found");
+    }
+
+    // Revoke current refresh token
+    await RefreshToken.update(
+      { revoked: true, revoked_at: new Date() },
+      { where: { id: storedToken.id } }
+    );
+
+    // Generate new tokens
+    const { accessToken, refreshToken: newRefreshToken } = await generateTokens(user.id, user.email);
+
+    res.status(StatusCodes.OK).json({
+      success: true,
+      data: {
+        accessToken,
+        refreshToken: newRefreshToken,
+        user: {
+          userId: user.id,
+          email: user.email,
+          displayName: user.displayName,
+        },
+      },
+    });
+
+  } catch (error) {
+    if (error instanceof TokenExpiredError) {
+      throw new UnAuthenticatedError("Refresh token has expired");
+    }
+    if (error instanceof JsonWebTokenError) {
+      throw new UnAuthenticatedError("Invalid refresh token");
+    }
+    throw error;
+  }
+};
+
+const logout = async (req: Request, res: Response) => {
+  const { refreshToken: token } = req.body;
+  const userId = req.user?.userId;
+
+  if (token) {
+    // Revoke specific refresh token
+    await RefreshToken.update(
+      { revoked: true, revoked_at: new Date() },
+      { where: { token, user_id: userId } }
+    );
+  }
+
+  if (userId) {
+    // Revoke all refresh tokens for user
+    await revokeUserTokens(userId);
+  }
+
+  res.status(StatusCodes.OK).json({
+    success: true,
+    message: "Logged out successfully"
+  });
+};
+
 export {
   register,
   login,
   verifyEmailWithToken,
   verifyAccessToken,
   getUserProfile,
+  refreshToken,
+  logout,
 };

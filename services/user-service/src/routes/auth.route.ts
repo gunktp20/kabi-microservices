@@ -5,6 +5,8 @@ import {
   verifyEmailWithToken,
   verifyAccessToken,
   getUserProfile,
+  refreshToken,
+  logout,
 } from "../controllers/auth.controller";
 import rateLimit from "express-rate-limit";
 import auth from "../middlewares/auth";
@@ -23,5 +25,7 @@ router.route("/login").post(login);
 router.route("/email/").put(verifyEmailWithToken);
 router.route("/verify").post(verifyAccessToken);
 router.route("/profile/:userId").get(auth, getUserProfile);
+router.route("/refresh").post(refreshToken);
+router.route("/logout").post(logout);
 
 export default router;

@@ -28,7 +28,7 @@ app.get("/health", (req, res) => {
   res.status(200).json({ status: "OK", service: "task-service" });
 });
 
-app.use("/api/v1/tasks", taskRoutes);
+app.use("/api/tasks", taskRoutes);
 
 app.use(notFound);
 app.use(errorHandlerMiddleware);

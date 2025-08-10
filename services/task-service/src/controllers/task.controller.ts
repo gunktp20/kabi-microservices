@@ -54,7 +54,7 @@ const createTask = async (req: Request, res: Response) => {
     });
 
     try {
-      await axios.post(`${REALTIME_SERVICE_URL}/api/v1/events/task-created`, {
+      await axios.post(`${REALTIME_SERVICE_URL}/api/events/task-created`, {
         taskId: task?.id,
         boardId: board_id,
         userId: req.user.userId,
@@ -148,7 +148,7 @@ const updateTasksOrder = async (req: Request, res: Response) => {
   );
 
   try {
-    await axios.post(`${REALTIME_SERVICE_URL}/api/v1/events/tasks-reordered`, {
+    await axios.post(`${REALTIME_SERVICE_URL}/api/events/tasks-reordered`, {
       boardId: board_id,
       tasksOrder: tasks_order,
       userId: req.user.userId,
@@ -197,7 +197,7 @@ const updateTaskDescription = async (req: Request, res: Response) => {
   await task.save();
 
   try {
-    await axios.post(`${REALTIME_SERVICE_URL}/api/v1/events/task-updated`, {
+    await axios.post(`${REALTIME_SERVICE_URL}/api/events/task-updated`, {
       taskId: task.id,
       boardId: task.board_id,
       userId: req.user?.userId,
@@ -248,7 +248,7 @@ const deleteTaskById = async (req: Request, res: Response) => {
   });
 
   try {
-    await axios.post(`${REALTIME_SERVICE_URL}/api/v1/events/task-deleted`, {
+    await axios.post(`${REALTIME_SERVICE_URL}/api/events/task-deleted`, {
       taskId: task_id,
       boardId: task.board_id,
       userId: req.user.userId,
@@ -349,7 +349,7 @@ const assignToMember = async (req: Request, res: Response) => {
     }, req.headers.authorization);
 
     try {
-      await axios.post(`${REALTIME_SERVICE_URL}/api/v1/events/task-assigned`, {
+      await axios.post(`${REALTIME_SERVICE_URL}/api/events/task-assigned`, {
         taskId: task.id,
         assigneeId: recipientUser.id,
         senderId: req.user.userId,

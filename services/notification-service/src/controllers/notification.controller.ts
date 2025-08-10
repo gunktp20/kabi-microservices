@@ -50,13 +50,13 @@ const getAllNotifications = async (req: Request, res: Response) => {
       invitations.map(async (invitation) => {
         try {
           const [senderResponse, recipientResponse, boardResponse] = await Promise.all([
-            axios.get(`${USER_SERVICE_URL}/api/v1/users/${invitation.sender_id}`, {
+            axios.get(`${USER_SERVICE_URL}/api/users/${invitation.sender_id}`, {
               headers: { Authorization: req.headers.authorization }
             }),
-            axios.get(`${USER_SERVICE_URL}/api/v1/users/${invitation.recipient_id}`, {
+            axios.get(`${USER_SERVICE_URL}/api/users/${invitation.recipient_id}`, {
               headers: { Authorization: req.headers.authorization }
             }),
-            axios.get(`${BOARD_SERVICE_URL}/api/v1/boards/${invitation.board_id}`, {
+            axios.get(`${BOARD_SERVICE_URL}/api/boards/${invitation.board_id}`, {
               headers: { Authorization: req.headers.authorization }
             })
           ]);
@@ -78,18 +78,18 @@ const getAllNotifications = async (req: Request, res: Response) => {
       assignments.map(async (assignment) => {
         try {
           const [senderResponse, assigneeResponse, taskResponse] = await Promise.all([
-            axios.get(`${USER_SERVICE_URL}/api/v1/users/${assignment.sender_id}`, {
+            axios.get(`${USER_SERVICE_URL}/api/users/${assignment.sender_id}`, {
               headers: { Authorization: req.headers.authorization }
             }),
-            axios.get(`${USER_SERVICE_URL}/api/v1/users/${assignment.assignee_id}`, {
+            axios.get(`${USER_SERVICE_URL}/api/users/${assignment.assignee_id}`, {
               headers: { Authorization: req.headers.authorization }
             }),
-            axios.get(`${TASK_SERVICE_URL}/api/v1/tasks/${assignment.task_id}`, {
+            axios.get(`${TASK_SERVICE_URL}/api/tasks/${assignment.task_id}`, {
               headers: { Authorization: req.headers.authorization }
             })
           ]);
 
-          const boardResponse = await axios.get(`${BOARD_SERVICE_URL}/api/v1/boards/${assignment.board_id}`, {
+          const boardResponse = await axios.get(`${BOARD_SERVICE_URL}/api/boards/${assignment.board_id}`, {
             headers: { Authorization: req.headers.authorization }
           });
 

@@ -16,7 +16,7 @@ class NotificationService {
   }, authorization?: string) {
     try {
       const response = await this.httpClient.post(
-        `/api/v1/assignments`,
+        `/api/assignments`,
         assignmentData,
         {
           headers: {
@@ -33,7 +33,7 @@ class NotificationService {
   async deleteAssignmentsByTaskId(taskId: string, authorization?: string) {
     try {
       const response = await this.httpClient.delete(
-        `/api/v1/assignments/task/${taskId}`,
+        `/api/assignments/task/${taskId}`,
         {
           headers: {
             Authorization: authorization || '',
@@ -49,7 +49,7 @@ class NotificationService {
   async getAssignmentByTaskAndUser(taskId: string, assigneeId: string, authorization?: string) {
     try {
       const response = await this.httpClient.get(
-        `/api/v1/assignments/task/${taskId}/user/${assigneeId}`,
+        `/api/assignments/task/${taskId}/user/${assigneeId}`,
         {
           headers: {
             Authorization: authorization || '',
@@ -68,7 +68,7 @@ class NotificationService {
   async deleteAssignment(assignmentId: string, authorization?: string) {
     try {
       const response = await this.httpClient.delete(
-        `/api/v1/assignments/${assignmentId}`,
+        `/api/assignments/${assignmentId}`,
         {
           headers: {
             Authorization: authorization || '',

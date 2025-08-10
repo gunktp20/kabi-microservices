@@ -28,59 +28,59 @@ export const SERVICES = {
 
 export const ROUTES = [
   {
-    path: '/api/v1/auth',
+    path: '/api/auth',
     target: SERVICES.USER_SERVICE.url,
     pathRewrite: {
-      '^/api/v1/auth': '/api/v1/auth'
+      '^/api/auth': '/api/auth'
     }
   },
   {
-    path: '/api/v1/users',
+    path: '/api/users',
     target: SERVICES.USER_SERVICE.url,
     pathRewrite: {
-      '^/api/v1/users': '/api/v1/users'
+      '^/api/users': '/api/users'
     }
   },
   {
-    path: '/api/v1/boards',
+    path: '/api/boards',
     target: SERVICES.BOARD_SERVICE.url,
     pathRewrite: {
-      '^/api/v1/boards': '/api/v1/boards'
+      '^/api/boards': '/api/boards'
     }
   },
   {
-    path: '/api/v1/columns',
+    path: '/api/columns',
     target: SERVICES.BOARD_SERVICE.url,
     pathRewrite: {
-      '^/api/v1/columns': '/api/v1/columns'
+      '^/api/columns': '/api/columns'
     }
   },
   {
-    path: '/api/v1/tasks',
+    path: '/api/tasks',
     target: SERVICES.TASK_SERVICE.url,
     pathRewrite: {
-      '^/api/v1/tasks': '/api/v1/tasks'
+      '^/api/tasks': '/api/tasks'
     }
   },
   {
-    path: '/api/v1/assignments',
+    path: '/api/assignments',
     target: SERVICES.NOTIFICATION_SERVICE.url,
     pathRewrite: {
-      '^/api/v1/assignments': '/api/v1/assignments'
+      '^/api/assignments': '/api/assignments'
     }
   },
   {
-    path: '/api/v1/notifications',
+    path: '/api/notifications',
     target: SERVICES.NOTIFICATION_SERVICE.url,
     pathRewrite: {
-      '^/api/v1/notifications': '/api/v1/notifications'
+      '^/api/notifications': '/api/notifications'
     }
   },
   {
-    path: '/api/v1/invitations',
+    path: '/api/invitations',
     target: SERVICES.NOTIFICATION_SERVICE.url,
     pathRewrite: {
-      '^/api/v1/invitations': '/api/v1/invitations'
+      '^/api/invitations': '/api/invitations'
     }
   }
 ];

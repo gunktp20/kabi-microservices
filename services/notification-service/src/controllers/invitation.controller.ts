@@ -22,7 +22,7 @@ const createBoardInvitation = async (req: Request, res: Response) => {
   }
 
   try {
-    const boardResponse = await axios.get(`${BOARD_SERVICE_URL}/api/v1/boards/${board_id}`, {
+    const boardResponse = await axios.get(`${BOARD_SERVICE_URL}/api/boards/${board_id}`, {
       headers: {
         Authorization: req.headers.authorization
       }
@@ -40,7 +40,7 @@ const createBoardInvitation = async (req: Request, res: Response) => {
       },
     });
 
-    const recipientUserResponse = await axios.get(`${USER_SERVICE_URL}/api/v1/users/${recipient_id}`, {
+    const recipientUserResponse = await axios.get(`${USER_SERVICE_URL}/api/users/${recipient_id}`, {
       headers: {
         Authorization: req.headers.authorization
       }
@@ -53,7 +53,7 @@ const createBoardInvitation = async (req: Request, res: Response) => {
 
     if (invitationWasSent) {
       try {
-        await axios.post(`${REALTIME_SERVICE_URL}/api/v1/events/invitation-sent`, {
+        await axios.post(`${REALTIME_SERVICE_URL}/api/events/invitation-sent`, {
           recipientId: recipient_id,
           senderId: req.user.userId,
           boardId: board_id,
@@ -76,7 +76,7 @@ const createBoardInvitation = async (req: Request, res: Response) => {
     });
 
     try {
-      await axios.post(`${REALTIME_SERVICE_URL}/api/v1/events/invitation-sent`, {
+      await axios.post(`${REALTIME_SERVICE_URL}/api/events/invitation-sent`, {
         recipientId: recipient_id,
         senderId: req.user.userId,
         boardId: board_id,
@@ -116,7 +116,7 @@ const acceptInvitation = async (req: Request, res: Response) => {
   invitation.status = "accepted";
 
   try {
-    await axios.post(`${BOARD_SERVICE_URL}/api/v1/boards/${board_id}/members`, {
+    await axios.post(`${BOARD_SERVICE_URL}/api/boards/${board_id}/members`, {
       user_id: req.user?.userId
     }, {
       headers: {

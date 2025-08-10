@@ -50,6 +50,8 @@ const createBoard = async (req: Request, res: Response) => {
       board: newBoard
     });
   } catch (err) {
+
+    console.log("ERR",err)
     throw err;
   }
 };

@@ -12,6 +12,8 @@ const AUTH_EMAIL = process.env.AUTH_EMAIL || "";
 const AUTH_PASS = process.env.AUTH_PASS || "";
 
 const EXPIRES_IN_ACCESS_TOKEN = process.env.EXPIRES_IN_ACCESS_TOKEN || "";
+const JWT_SECRET_REFRESH = process.env.JWT_SECRET_REFRESH || "";
+const EXPIRES_IN_REFRESH_TOKEN = process.env.EXPIRES_IN_REFRESH_TOKEN || "7d";
 
 export const DB_NAME = process.env.DB_NAME || "kabi_user";
 export const DB_USERNAME = process.env.DB_USERNAME || "root";
@@ -26,7 +28,9 @@ export {
   CLIENT_URL,
   SECRET_VERIFY_EMAIL,
   JWT_SECRET_ACCESS,
-  AUTH_EMAIL,
+  JWT_SECRET_REFRESH,
+  AUTH_EMAIL, 
   AUTH_PASS,
   EXPIRES_IN_ACCESS_TOKEN,
+  EXPIRES_IN_REFRESH_TOKEN,
 };
