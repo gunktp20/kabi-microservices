@@ -4,26 +4,15 @@ import cors from "cors";
 import helmet from "helmet";
 import rateLimit from "express-rate-limit";
 import { PORT } from "./config/application.config";
-import sequelize from "./config/database";
+import sequelize from "./db/connection";
 import errorHandlerMiddleware from "./middlewares/error-handler";
 import notFound from "./middlewares/not-found";
-
 import taskRoutes from "./routes/task.route";
-import assignmentRoutes from "./routes/assignment.route";
 
 import Task from "./models/Task";
-import Assignment from "./models/Assignment";
-import BoardMembers from "./models/BoardMembers";
-
-Task.hasOne(Assignment, {
-  foreignKey: "task_id",
-  sourceKey: "id",
-  onDelete: "CASCADE",
-});
-Assignment.belongsTo(Task, { foreignKey: "task_id", onDelete: "CASCADE" });
 
 const app = express();
-
+ 
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 100,
@@ -40,7 +29,6 @@ app.get("/health", (req, res) => {
 });
 
 app.use("/api/v1/tasks", taskRoutes);
-app.use("/api/v1/assignments", assignmentRoutes);
 
 app.use(notFound);
 app.use(errorHandlerMiddleware);

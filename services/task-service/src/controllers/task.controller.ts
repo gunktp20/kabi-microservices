@@ -6,11 +6,12 @@ import {
   UnAuthenticatedError,
 } from "../errors";
 import Task from "../models/Task";
-import BoardMembers from "../models/BoardMembers";
-import Assignment from "../models/Assignment";
 import "express-async-errors";
 import axios from "axios";
 import { REALTIME_SERVICE_URL } from "../config/application.config";
+import boardService from "../services/boardService";
+import notificationService from "../services/notificationService";
+import userService from "../services/userService";
 
 const createTask = async (req: Request, res: Response) => {
   const { description, board_id, column_id } = req.body;
@@ -23,12 +24,21 @@ const createTask = async (req: Request, res: Response) => {
     throw new BadRequestError("Please provide all value");
   }
 
-  const isBoardMember = await BoardMembers.findOne({
-    where: { board_id, user_id: req.user.userId },
-  });
+  try {
+    const boardMember = await boardService.checkBoardMembership(
+      board_id,
+      req.user.userId,
+      req.headers.authorization
+    );
 
-  if (!isBoardMember) {
-    throw new UnAuthenticatedError("you are not board member");
+    if (!boardMember) {
+      throw new UnAuthenticatedError("you are not board member");
+    }
+  } catch (error: any) {
+    if (error.response?.status === 404) {
+      throw new UnAuthenticatedError("you are not board member");
+    }
+    throw error;
   }
 
   try {
@@ -60,12 +70,21 @@ const createTask = async (req: Request, res: Response) => {
 };
 
 const getTasksByBoardId = async (req: Request, res: Response) => {
-  const isBoardMember = await BoardMembers.findOne({
-    where: { board_id: req.params.board_id, user_id: req.user?.userId },
-  });
+  try {
+    const boardMember = await boardService.checkBoardMembership(
+      req.params.board_id,
+      req.user?.userId || '',
+      req.headers.authorization
+    );
 
-  if (!isBoardMember) {
-    throw new UnAuthenticatedError("you are not board member");
+    if (!boardMember) {
+      throw new UnAuthenticatedError("you are not board member");
+    }
+  } catch (error: any) {
+    if (error.response?.status === 404) {
+      throw new UnAuthenticatedError("you are not board member");
+    }
+    throw error;
   }
 
   try {
@@ -90,12 +109,21 @@ const updateTasksOrder = async (req: Request, res: Response) => {
   ) {
     throw new NotFoundError("Please provide all value");
   }
-  const isBoardMember = await BoardMembers.findOne({
-    where: { board_id: board_id, user_id: req.user.userId },
-  });
+  try {
+    const boardMember = await boardService.checkBoardMembership(
+      board_id,
+      req.user.userId,
+      req.headers.authorization
+    );
 
-  if (!isBoardMember) {
-    throw new UnAuthenticatedError("you are not board member");
+    if (!boardMember) {
+      throw new UnAuthenticatedError("you are not board member");
+    }
+  } catch (error: any) {
+    if (error.response?.status === 404) {
+      throw new UnAuthenticatedError("you are not board member");
+    }
+    throw error;
   }
 
   await Promise.all(
@@ -148,12 +176,21 @@ const updateTaskDescription = async (req: Request, res: Response) => {
     throw new NotFoundError("Not found task with id " + task_id);
   }
 
-  const isBoardMember = await BoardMembers.findOne({
-    where: { user_id: req.user?.userId, board_id: task.board_id },
-  });
+  try {
+    const boardMember = await boardService.checkBoardMembership(
+      task.board_id,
+      req.user?.userId || '',
+      req.headers.authorization
+    );
 
-  if (!isBoardMember) {
-    throw new UnAuthenticatedError("you are not board member");
+    if (!boardMember) {
+      throw new UnAuthenticatedError("you are not board member");
+    }
+  } catch (error: any) {
+    if (error.response?.status === 404) {
+      throw new UnAuthenticatedError("you are not board member");
+    }
+    throw error;
   }
 
   task.description = description;
@@ -181,16 +218,31 @@ const deleteTaskById = async (req: Request, res: Response) => {
   if (!task) {
     throw new NotFoundError("Not found your task");
   }
-  const isBoardMember = await BoardMembers.findOne({
-    where: { board_id: task?.board_id, user_id: req.user.userId },
-  });
-  if (!isBoardMember) {
-    throw new UnAuthenticatedError("you is not board member");
+  try {
+    const boardMember = await boardService.checkBoardMembership(
+      task?.board_id || '',
+      req.user.userId,
+      req.headers.authorization
+    );
+
+    if (!boardMember) {
+      throw new UnAuthenticatedError("you are not board member");
+    }
+  } catch (error: any) {
+    if (error.response?.status === 404) {
+      throw new UnAuthenticatedError("you are not board member");
+    }
+    throw error;
   }
   
-  await Assignment.destroy({
-    where: { task_id },
-  });
+  try {
+    await notificationService.deleteAssignmentsByTaskId(
+      task_id,
+      req.headers.authorization
+    );
+  } catch (error) {
+    console.error('Failed to delete assignments:', error);
+  }
   await Task.destroy({
     where: { id: task_id },
   });
@@ -225,12 +277,11 @@ const assignToMember = async (req: Request, res: Response) => {
   }
 
   try {
-    const userResponse = await axios.get(`http://user-service:3001/api/v1/users/by-email/${recipient_email}`, {
-      headers: {
-        Authorization: req.headers.authorization
-      }
-    });
-    const recipientUser = userResponse.data.user;
+    const userResponse = await userService.getUserByEmail(
+      recipient_email,
+      req.headers.authorization
+    );
+    const recipientUser = userResponse.user;
 
     if (task.assignee_id === recipientUser?.id) {
       return res.status(StatusCodes.OK).json({ msg: "task was assigned" });
@@ -240,19 +291,23 @@ const assignToMember = async (req: Request, res: Response) => {
       throw new NotFoundError("Not found recipient user");
     }
 
-    const isBoardMember = await BoardMembers.findOne({
-      where: { user_id: req.user?.userId, board_id: task.board_id },
-    });
+    const senderBoardMember = await boardService.checkBoardMembership(
+      task.board_id,
+      req.user?.userId || '',
+      req.headers.authorization
+    );
 
-    if (!isBoardMember) {
+    if (!senderBoardMember) {
       throw new UnAuthenticatedError("you are not board member");
     }
 
-    const isRecipientUserAMember = await BoardMembers.findOne({
-      where: { user_id: recipientUser?.id, board_id: task.board_id },
-    });
+    const recipientBoardMember = await boardService.checkBoardMembership(
+      task.board_id,
+      recipientUser?.id || '',
+      req.headers.authorization
+    );
 
-    if (!isRecipientUserAMember) {
+    if (!recipientBoardMember) {
       throw new UnAuthenticatedError("recipient user is not board member");
     }
 
@@ -273,23 +328,25 @@ const assignToMember = async (req: Request, res: Response) => {
       return res.status(StatusCodes.OK).json({ msg: "task was assigned" });
     }
 
-    const oldAssignment = await Assignment.findOne({
-      where: {
-        assignee_id: recipientUser?.id,
-        task_id: task_id,
-      },
-    });
+    const oldAssignment = await notificationService.getAssignmentByTaskAndUser(
+      task_id,
+      recipientUser?.id || '',
+      req.headers.authorization
+    );
 
     if (oldAssignment) {
-      await oldAssignment.destroy();
+      await notificationService.deleteAssignment(
+        oldAssignment.id,
+        req.headers.authorization
+      );
     }
 
-    await Assignment.create({
-      assignee_id: recipientUser?.id,
-      sender_id: req.user?.userId,
+    await notificationService.createAssignment({
+      assignee_id: recipientUser?.id || '',
+      sender_id: req.user?.userId || '',
       task_id: task.id,
       board_id: task.board_id
-    });
+    }, req.headers.authorization);
 
     try {
       await axios.post(`${REALTIME_SERVICE_URL}/api/v1/events/task-assigned`, {

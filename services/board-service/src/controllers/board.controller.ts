@@ -194,6 +194,40 @@ const addBoardMember = async (req: Request, res: Response) => {
   res.status(StatusCodes.OK).json({ msg: "User added to board successfully" });
 };
 
+const getBoardMembers = async (req: Request, res: Response) => {
+  const { board_id } = req.params;
+
+  const isMemberInBoard = await BoardMembers.findOne({
+    where: { user_id: req.user?.userId, board_id },
+  });
+
+  if (!isMemberInBoard) {
+    throw new UnAuthenticatedError("You are not a member in the board");
+  }
+
+  const members = await BoardMembers.findAll({
+    where: { board_id },
+  });
+
+  res.status(StatusCodes.OK).json({ members });
+};
+
+const checkBoardMembership = async (req: Request, res: Response) => {
+  const { board_id, user_id } = req.params;
+
+  const member = await BoardMembers.findOne({
+    where: { board_id, user_id }
+  });
+
+  if (!member) {
+    return res.status(StatusCodes.NOT_FOUND).json({ 
+      message: "User is not a member of this board" 
+    });
+  }
+
+  res.status(StatusCodes.OK).json({ member });
+};
+
 export {
   createBoard,
   getAllBoards,
@@ -201,4 +235,6 @@ export {
   updateBoardById,
   deleteBoardById,
   addBoardMember,
+  getBoardMembers,
+  checkBoardMembership,
 };

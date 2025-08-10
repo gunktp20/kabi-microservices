@@ -6,6 +6,8 @@ import {
   updateBoardById,
   deleteBoardById,
   addBoardMember,
+  getBoardMembers,
+  checkBoardMembership,
 } from "../controllers/board.controller";
 import { authenticateUser } from "../middlewares/auth";
 
@@ -23,6 +25,10 @@ router.route("/:board_id")
   .delete(deleteBoardById);
 
 router.route("/:board_id/members")
-  .post(addBoardMember);
+  .post(addBoardMember)
+  .get(getBoardMembers);
+
+router.route("/:board_id/members/:user_id")
+  .get(checkBoardMembership);
 
 export default router;
