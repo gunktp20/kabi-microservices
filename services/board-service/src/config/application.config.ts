@@ -9,7 +9,9 @@ export const DB_USERNAME = process.env.DB_USERNAME || "root";
 export const DB_PASSWORD = process.env.DB_PASSWORD || "root_password";
 export const DB_HOST = process.env.DB_HOST || "localhost";
 export const DB_PORT = process.env.DB_PORT || "3306";
-// Load RSA public key for verifying JWTs
+// ? Load RSA public key for verifying JWTs
 export const JWT_PUBLIC_KEY = process.env.JWT_PUBLIC_KEY || 
   fs.readFileSync(path.join(__dirname, '../../../keys/public_key.pem'), 'utf8');
+// export const JWT_PUBLIC_KEY = process.env.JWT_PUBLIC_KEY || 
+//   fs.readFileSync(path.join(__dirname, '../../../keys/wrong_public_key.pem'), 'utf8');
 export const NODE_ENV = process.env.NODE_ENV || "development";

@@ -4,32 +4,40 @@ import jwt, {
 } from "jsonwebtoken";
 import { NextFunction, Request, Response } from "express";
 import {
-  JWT_SECRET_ACCESS,
+  JWT_PUBLIC_KEY,
 } from "../config/application.config";
 
-interface IJwtPayload extends JwtPayload {
+interface AuthenticatedUser {
   userId: string;
-  phoneNumber: string;
   email: string;
 }
 
-const auth = async (req: Request, res: Response, next: NextFunction) => {
+declare global {
+  namespace Express {
+    interface Request {
+      user?: AuthenticatedUser;
+    }
+  }
+}
+
+export const authenticateUser = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   const authHeader = req.headers.authorization;
-  if (!authHeader || !authHeader.startsWith("Bearer")) {
+
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
     throw new UnAuthenticatedError("Authentication Invalid");
   }
+
   const token = authHeader.split(" ")[1];
 
   try {
-    const { userId, email } = (await jwt.verify(
-      token,
-      JWT_SECRET_ACCESS
-    )) as IJwtPayload;
-    req.user = { userId, email };
+    const payload = jwt.verify(token, JWT_PUBLIC_KEY, { algorithms: ['RS256'] }) as JwtPayload & AuthenticatedUser;
+    req.user = { userId: payload.userId, email: payload.email };
     next();
-  } catch (err) {
-    throw new ForbiddenError("Token is not valid");
+  } catch (error) {
+    throw new UnAuthenticatedError("Authentication Invalid");
   }
 };
-
-export default auth;
