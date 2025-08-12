@@ -7,11 +7,8 @@ import {
 } from "../errors";
 import Invitation from "../models/Invitation";
 import "express-async-errors";
-import axios from "axios";
 import {
   REALTIME_SERVICE_URL,
-  USER_SERVICE_URL,
-  BOARD_SERVICE_URL,
 } from "../config/application.config";
 import boardService from "../services/boardService";
 import userService from "../services/userService";
@@ -28,14 +25,14 @@ const createBoardInvitation = async (req: Request, res: Response) => {
       board_id,
       req.headers.authorization
     );
-    const board = boardResponse.data.board;
+    const board = boardResponse.board;
 
     if (board.owner_id !== req.user.userId) {
       throw new UnAuthenticatedError("it's not your board");
     }
 
     const recipientUserResponse = await userService.getUserById(recipient_id)
-    const recipientUser = recipientUserResponse.data.user;
+    const recipientUser = recipientUserResponse.user;
 
     if (!recipientUser) {
       throw new NotFoundError("Not found recipient user");
@@ -178,7 +175,7 @@ const createBulkBoardInvitations = async (req: Request, res: Response) => {
 
   try {
     const boardResponse = await boardService.getBoardById(board_id)
-    const board = boardResponse.data.board;
+    const board = boardResponse.board;
 
     if (board.owner_id !== req.user.userId) {
       throw new UnAuthenticatedError("it's not your board");
@@ -207,7 +204,7 @@ const createBulkBoardInvitations = async (req: Request, res: Response) => {
         });
 
         const recipientUserResponse = await userService.getUserById(recipient_id)
-        const recipientUser = recipientUserResponse.data.user;
+        const recipientUser = recipientUserResponse.user;
 
         if (!recipientUser) {
           results.push({

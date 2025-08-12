@@ -3,12 +3,9 @@ import { StatusCodes } from "http-status-codes";
 import Invitation from "../models/Invitation";
 import Assignment from "../models/Assignment";
 import { BadRequestError } from "../errors";
-import axios from "axios";
-import {
-  USER_SERVICE_URL,
-  BOARD_SERVICE_URL,
-  TASK_SERVICE_URL,
-} from "../config/application.config";
+import userService from "../services/userService";
+import boardService from "../services/boardService";
+import taskService from "../services/taskService";
 
 const getAllNotifications = async (req: Request, res: Response) => {
   if (typeof req.user?.userId === "undefined") {
@@ -50,22 +47,16 @@ const getAllNotifications = async (req: Request, res: Response) => {
       invitations.map(async (invitation) => {
         try {
           const [senderResponse, recipientResponse, boardResponse] = await Promise.all([
-            axios.get(`${USER_SERVICE_URL}/api/users/${invitation.sender_id}`, {
-              headers: { Authorization: req.headers.authorization }
-            }),
-            axios.get(`${USER_SERVICE_URL}/api/users/${invitation.recipient_id}`, {
-              headers: { Authorization: req.headers.authorization }
-            }),
-            axios.get(`${BOARD_SERVICE_URL}/api/boards/${invitation.board_id}`, {
-              headers: { Authorization: req.headers.authorization }
-            })
+            userService.getUserById(invitation.sender_id, req.headers.authorization as string),
+            userService.getUserById(invitation.recipient_id, req.headers.authorization as string),
+            boardService.getBoardById(invitation.board_id, req.headers.authorization as string)
           ]);
 
           return {
             ...invitation.toJSON(),
-            sender: senderResponse.data.user,
-            recipient: recipientResponse.data.user,
-            board: boardResponse.data.board
+            sender: senderResponse.user,
+            recipient: recipientResponse.user,
+            board: boardResponse.board
           };
         } catch (error) {
           console.error("Error enriching invitation:", error);
@@ -78,28 +69,20 @@ const getAllNotifications = async (req: Request, res: Response) => {
       assignments.map(async (assignment) => {
         try {
           const [senderResponse, assigneeResponse, taskResponse] = await Promise.all([
-            axios.get(`${USER_SERVICE_URL}/api/users/${assignment.sender_id}`, {
-              headers: { Authorization: req.headers.authorization }
-            }),
-            axios.get(`${USER_SERVICE_URL}/api/users/${assignment.assignee_id}`, {
-              headers: { Authorization: req.headers.authorization }
-            }),
-            axios.get(`${TASK_SERVICE_URL}/api/tasks/${assignment.task_id}`, {
-              headers: { Authorization: req.headers.authorization }
-            })
+            userService.getUserById(assignment.sender_id, req.headers.authorization as string),
+            userService.getUserById(assignment.assignee_id, req.headers.authorization as string),
+            taskService.getTaskById(assignment.task_id, req.headers.authorization as string)
           ]);
 
-          const boardResponse = await axios.get(`${BOARD_SERVICE_URL}/api/boards/${assignment.board_id}`, {
-            headers: { Authorization: req.headers.authorization }
-          });
+          const boardResponse = await boardService.getBoardById(assignment.board_id, req.headers.authorization as string);
 
           return {
             ...assignment.toJSON(),
-            sender: senderResponse.data.user,
-            assignee: assigneeResponse.data.user,
+            sender: senderResponse.user,
+            assignee: assigneeResponse.user,
             task: {
-              ...taskResponse.data.task,
-              Board: boardResponse.data.board
+              ...taskResponse.task,
+              Board: boardResponse.board
             }
           };
         } catch (error) {
