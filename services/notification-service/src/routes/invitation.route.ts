@@ -1,6 +1,7 @@
 import express from "express";
 import {
   createBoardInvitation,
+  createBulkBoardInvitations,
   acceptInvitation,
   declineInvitation,
   readInvitations,
@@ -14,10 +15,13 @@ router.use(authenticateUser);
 router.route("/:board_id")
   .post(createBoardInvitation);
 
-router.route("/accept")
+router.route("/:board_id/bulk")
+  .post(createBulkBoardInvitations);
+
+router.route("/:invitation_id/accept")
   .post(acceptInvitation);
 
-router.route("/decline")
+router.route("/:invitation_id/decline")
   .post(declineInvitation);
 
 router.route("/read")

@@ -13,6 +13,8 @@ import {
   USER_SERVICE_URL,
   BOARD_SERVICE_URL,
 } from "../config/application.config";
+import boardService from "../services/boardService";
+import userService from "../services/userService";
 
 const createBoardInvitation = async (req: Request, res: Response) => {
   const { recipient_id } = req.body;
@@ -22,52 +24,40 @@ const createBoardInvitation = async (req: Request, res: Response) => {
   }
 
   try {
-    const boardResponse = await axios.get(`${BOARD_SERVICE_URL}/api/boards/${board_id}`, {
-      headers: {
-        Authorization: req.headers.authorization
-      }
-    });
+      const boardResponse = await boardService.getBoardById(
+      board_id,
+      req.headers.authorization
+    );
     const board = boardResponse.data.board;
 
     if (board.owner_id !== req.user.userId) {
       throw new UnAuthenticatedError("it's not your board");
     }
 
-    const invitationWasSent = await Invitation.findOne({
-      where: {
-        recipient_id,
-        board_id,
-      },
-    });
-
-    const recipientUserResponse = await axios.get(`${USER_SERVICE_URL}/api/users/${recipient_id}`, {
-      headers: {
-        Authorization: req.headers.authorization
-      }
-    });
+    const recipientUserResponse = await userService.getUserById(recipient_id)
     const recipientUser = recipientUserResponse.data.user;
 
     if (!recipientUser) {
       throw new NotFoundError("Not found recipient user");
     }
 
-    if (invitationWasSent) {
-      try {
-        await axios.post(`${REALTIME_SERVICE_URL}/api/events/invitation-sent`, {
-          recipientId: recipient_id,
-          senderId: req.user.userId,
-          boardId: board_id,
-          boardName: board.board_name,
-          senderDisplayName: recipientUser.displayName,
-        });
-      } catch (error) {
-        console.error("Failed to emit invitation sent event:", error);
-      }
+    // if (invitationWasSent) {
+    //   try {
+    //     await axios.post(`${REALTIME_SERVICE_URL}/api/events/invitation-sent`, {
+    //       recipientId: recipient_id,
+    //       senderId: req.user.userId,
+    //       boardId: board_id,
+    //       boardName: board.board_name,
+    //       senderDisplayName: recipientUser.displayName,
+    //     });
+    //   } catch (error) {
+    //     console.error("Failed to emit invitation sent event:", error);
+    //   }
 
-      return res.status(StatusCodes.OK).json({
-        msg: `Invited ${recipientUser?.displayName} to ${board.board_name} board`,
-      });
-    }
+    //   return res.status(StatusCodes.OK).json({
+    //     msg: `Invited ${recipientUser?.displayName} to ${board.board_name} board`,
+    //   });
+    // }
 
     await Invitation.create({
       recipient_id: recipientUser?.id,
@@ -75,21 +65,21 @@ const createBoardInvitation = async (req: Request, res: Response) => {
       board_id,
     });
 
-    try {
-      await axios.post(`${REALTIME_SERVICE_URL}/api/events/invitation-sent`, {
-        recipientId: recipient_id,
-        senderId: req.user.userId,
-        boardId: board_id,
-        boardName: board.board_name,
-        senderDisplayName: recipientUser.displayName,
-      });
-    } catch (error) {
-      console.error("Failed to emit invitation sent event:", error);
-    }
+    // try {
+    //   await axios.post(`${REALTIME_SERVICE_URL}/api/events/invitation-sent`, {
+    //     recipientId: recipient_id,
+    //     senderId: req.user.userId,
+    //     boardId: board_id,
+    //     boardName: board.board_name,
+    //     senderDisplayName: recipientUser.displayName,
+    //   });
+    // } catch (error) {
+    //   console.error("Failed to emit invitation sent event:", error);
+    // }
 
-    return res.status(StatusCodes.OK).json({
-      msg: `Invited ${recipientUser?.displayName} to ${board.board_name} board`,
-    });
+    // return res.status(StatusCodes.OK).json({
+    //   msg: `Invited ${recipientUser?.displayName} to ${board.board_name} board`,
+    // });
   } catch (error: any) {
     if (error.response?.status === 404) {
       throw new NotFoundError("Board or user not found");
@@ -100,9 +90,11 @@ const createBoardInvitation = async (req: Request, res: Response) => {
 
 const acceptInvitation = async (req: Request, res: Response) => {
   const { sender_id, board_id } = req.body;
+  const { invitation_id } = req.params
 
   const invitation = await Invitation.findOne({
     where: {
+      id:invitation_id,
       recipient_id: req.user?.userId,
       board_id,
       sender_id,
@@ -116,13 +108,7 @@ const acceptInvitation = async (req: Request, res: Response) => {
   invitation.status = "accepted";
 
   try {
-    await axios.post(`${BOARD_SERVICE_URL}/api/boards/${board_id}/members`, {
-      user_id: req.user?.userId
-    }, {
-      headers: {
-        Authorization: req.headers.authorization
-      }
-    });
+    await boardService.addBoardMember(board_id, { user_id: req.user?.userId},req.headers.authorization)
   } catch (error) {
     console.error("Failed to add user to board:", error);
     throw new BadRequestError("Failed to accept invitation - could not add user to board");
@@ -182,8 +168,110 @@ const readInvitations = async (req: Request, res: Response) => {
   res.status(StatusCodes.OK).json({ msg: "Invitations were read" });
 };
 
+const createBulkBoardInvitations = async (req: Request, res: Response) => {
+  const { invitedMembers } = req.body;
+  const { board_id } = req.params;
+
+  if (!board_id || !invitedMembers || !Array.isArray(invitedMembers) || typeof req.user?.userId === "undefined") {
+    throw new BadRequestError("Please provide board_id and invitedMembers array");
+  }
+
+  try {
+    const boardResponse = await boardService.getBoardById(board_id)
+    const board = boardResponse.data.board;
+
+    if (board.owner_id !== req.user.userId) {
+      throw new UnAuthenticatedError("it's not your board");
+    }
+
+    const results = [];
+    
+    for (const member of invitedMembers) {
+      const { recipient_id } = member;
+      
+      if (!recipient_id) {
+        results.push({
+          recipient_id: null,
+          success: false,
+          message: "recipient_id is required"
+        });
+        continue;
+      }
+
+      try {
+        const invitationWasSent = await Invitation.findOne({
+          where: {
+            recipient_id,
+            board_id,
+          },
+        });
+
+        const recipientUserResponse = await userService.getUserById(recipient_id)
+        const recipientUser = recipientUserResponse.data.user;
+
+        if (!recipientUser) {
+          results.push({
+            recipient_id,
+            success: false,
+            message: "Recipient user not found"
+          });
+          continue;
+        }
+
+        if (!invitationWasSent) {
+          await Invitation.create({
+            recipient_id: recipientUser.id,
+            sender_id: req.user.userId,
+            board_id,
+          });
+        }
+
+        // try {
+        //   await axios.post(`${REALTIME_SERVICE_URL}/api/events/invitation-sent`, {
+        //     recipientId: recipient_id,
+        //     senderId: req.user.userId,
+        //     boardId: board_id,
+        //     boardName: board.board_name,
+        //     senderDisplayName: recipientUser.displayName,
+        //   });
+        // } catch (error) {
+        //   console.error("Failed to emit invitation sent event:", error);
+        // }
+
+        results.push({
+          recipient_id,
+          success: true,
+          message: `Invited ${recipientUser.displayName} to ${board.board_name} board`
+        });
+
+      } catch (memberError: any) {
+        results.push({
+          recipient_id,
+          success: false,
+          message: memberError.response?.status === 404 ? "User not found" : "Failed to create invitation"
+        });
+      }
+    }
+
+    return res.status(StatusCodes.OK).json({
+      message: "Bulk invitations processed",
+      results,
+      totalProcessed: invitedMembers.length,
+      successful: results.filter(r => r.success).length,
+      failed: results.filter(r => !r.success).length
+    });
+
+  } catch (error: any) {
+    if (error.response?.status === 404) {
+      throw new NotFoundError("Board not found");
+    }
+    throw error;
+  }
+};
+
 export {
   createBoardInvitation,
+  createBulkBoardInvitations,
   acceptInvitation,
   declineInvitation,
   readInvitations,

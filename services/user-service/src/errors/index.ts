@@ -43,9 +43,6 @@ export class InternalServerError extends CustomAPIError {
 }
 
 export const errorHandler = (err: any, req: any, res: any, next: any) => {
-
-  console.log("error :" , err)
-  console.log("error :" , err.Message)
   
   if (err instanceof CustomAPIError) {
     return res.status(err.statusCode).json({ error: err.message });

@@ -6,9 +6,10 @@ import BoardMembers from "../models/BoardMembers";
 import { BadRequestError, UnAuthenticatedError, NotFoundError } from "../errors";
 import "express-async-errors";
 import { Op } from "sequelize";
+import notificationService from "../services/notificationService";
 
 const createBoard = async (req: Request, res: Response) => {
-  const { board_name, key, description } = req.body;
+  const { board_name, key, description , invitedMembers } = req.body;
   if (!board_name || !key || typeof req.user?.userId === "undefined") {
     throw new BadRequestError("Please provide all value");
   }
@@ -20,6 +21,24 @@ const createBoard = async (req: Request, res: Response) => {
       description: description || null,
       owner_id: req.user?.userId,
     });
+
+    if (invitedMembers && invitedMembers.length > 0) {
+      try {
+        const transformedMembers = invitedMembers.map(
+          (member : { id : string}) => ({
+            recipient_id: member.id,
+          })
+        );
+
+        await notificationService.createBulkBoardInvitations(
+          newBoard.id,
+          transformedMembers,
+          req.headers.authorization
+        );
+      } catch (error) {
+        console.error("Failed to create invitations:", error);
+      }
+    }
 
     await BoardMembers.create({
       user_id: req.user?.userId,
@@ -50,8 +69,6 @@ const createBoard = async (req: Request, res: Response) => {
       board: newBoard
     });
   } catch (err) {
-
-    console.log("ERR",err)
     throw err;
   }
 };
@@ -93,13 +110,13 @@ const getAllBoards = async (req: Request, res: Response) => {
 
 const getBoardById = async (req: Request, res: Response) => {
   const { board_id } = req.params;
-  const isMemberInBoard = await BoardMembers.findOne({
-    where: { user_id: req.user?.userId, board_id },
-  });
+  // const isMemberInBoard = await BoardMembers.findOne({
+  //   where: { user_id: req.user?.userId, board_id },
+  // });
 
-  if (!isMemberInBoard) {
-    throw new UnAuthenticatedError("Your are not a member in the board");
-  }
+  // if (!isMemberInBoard) {
+  //   throw new UnAuthenticatedError("Your are not a member in the board");
+  // }
 
   try {
     const board = await Board.findOne({

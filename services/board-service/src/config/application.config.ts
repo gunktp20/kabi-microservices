@@ -15,3 +15,4 @@ export const JWT_PUBLIC_KEY = process.env.JWT_PUBLIC_KEY ||
 // export const JWT_PUBLIC_KEY = process.env.JWT_PUBLIC_KEY || 
 //   fs.readFileSync(path.join(__dirname, '../../../keys/wrong_public_key.pem'), 'utf8');
 export const NODE_ENV = process.env.NODE_ENV || "development";
+export const NOTIFICATION_SERVICE_URL = process.env.NOTIFICATION_SERVICE_URL || "http://localhost:3004";
