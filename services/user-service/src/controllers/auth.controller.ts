@@ -270,7 +270,7 @@ const getUserProfile = async (req: Request, res: Response) => {
     success: true,
     data: user,
   });
-};
+}; 
 
 const refreshToken = async (req: Request, res: Response) => {
   const { refresh_token: token } = req.body;

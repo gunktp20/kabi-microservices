@@ -40,7 +40,7 @@ const createTask = async (req: Request, res: Response) => {
     }
     throw error;
   }
-
+  
   try {
     const newTask = await Task.create({
       description,
@@ -53,15 +53,15 @@ const createTask = async (req: Request, res: Response) => {
       where: { id: newTask.id },
     });
 
-    try {
-      await axios.post(`${REALTIME_SERVICE_URL}/api/events/task-created`, {
-        taskId: task?.id,
-        boardId: board_id,
-        userId: req.user.userId,
-      });
-    } catch (error) {
-      console.error("Failed to emit task created event:", error);
-    }
+    // try {
+    //   await axios.post(`${REALTIME_SERVICE_URL}/api/events/task-created`, {
+    //     taskId: task?.id,
+    //     boardId: board_id,
+    //     userId: req.user.userId,
+    //   });
+    // } catch (error) {
+    //   console.error("Failed to emit task created event:", error);
+    // }
 
     return res.status(StatusCodes.CREATED).json(task);
   } catch (err) {
@@ -147,15 +147,15 @@ const updateTasksOrder = async (req: Request, res: Response) => {
     )
   );
 
-  try {
-    await axios.post(`${REALTIME_SERVICE_URL}/api/events/tasks-reordered`, {
-      boardId: board_id,
-      tasksOrder: tasks_order,
-      userId: req.user.userId,
-    });
-  } catch (error) {
-    console.error("Failed to emit tasks reordered event:", error);
-  }
+  // try {
+  //   await axios.post(`${REALTIME_SERVICE_URL}/api/events/tasks-reordered`, {
+  //     boardId: board_id,
+  //     tasksOrder: tasks_order,
+  //     userId: req.user.userId,
+  //   });
+  // } catch (error) {
+  //   console.error("Failed to emit tasks reordered event:", error);
+  // }
 
   res.status(StatusCodes.OK).json({ msg: "updated tasks order" });
 };
@@ -196,17 +196,17 @@ const updateTaskDescription = async (req: Request, res: Response) => {
   task.description = description;
   await task.save();
 
-  try {
-    await axios.post(`${REALTIME_SERVICE_URL}/api/events/task-updated`, {
-      taskId: task.id,
-      boardId: task.board_id,
-      userId: req.user?.userId,
-    });
-  } catch (error) {
-    console.error("Failed to emit task updated event:", error);
-  }
+  // try {
+  //   await axios.post(`${REALTIME_SERVICE_URL}/api/events/task-updated`, {
+  //     taskId: task.id,
+  //     boardId: task.board_id,
+  //     userId: req.user?.userId,
+  //   });
+  // } catch (error) {
+  //   console.error("Failed to emit task updated event:", error);
+  // }
 
-  res.status(StatusCodes.OK).json({ msg: " updated your task description" });
+  res.status(StatusCodes.OK).json({ msg: "updated your task description" });
 };
 
 const deleteTaskById = async (req: Request, res: Response) => {
@@ -235,27 +235,28 @@ const deleteTaskById = async (req: Request, res: Response) => {
     throw error;
   }
   
-  try {
-    await notificationService.deleteAssignmentsByTaskId(
-      task_id,
-      req.headers.authorization
-    );
-  } catch (error) {
-    console.error('Failed to delete assignments:', error);
-  }
+  // try {
+  //   await notificationService.deleteAssignmentsByTaskId(
+  //     task_id,
+  //     req.headers.authorization
+  //   );
+  // } catch (error) {
+  //   console.error('Failed to delete assignments:', error);
+  // }
+
   await Task.destroy({
     where: { id: task_id },
   });
 
-  try {
-    await axios.post(`${REALTIME_SERVICE_URL}/api/events/task-deleted`, {
-      taskId: task_id,
-      boardId: task.board_id,
-      userId: req.user.userId,
-    });
-  } catch (error) {
-    console.error("Failed to emit task deleted event:", error);
-  }
+  // try {
+  //   await axios.post(`${REALTIME_SERVICE_URL}/api/events/task-deleted`, {
+  //     taskId: task_id,
+  //     boardId: task.board_id,
+  //     userId: req.user.userId,
+  //   });
+  // } catch (error) {
+  //   console.error("Failed to emit task deleted event:", error);
+  // }
 
   res.status(StatusCodes.OK).json({ msg: "Deleted your task" });
 };
