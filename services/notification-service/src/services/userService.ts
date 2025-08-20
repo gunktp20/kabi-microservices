@@ -1,5 +1,5 @@
-import HttpClient from './httpClient';
-import { USER_SERVICE_URL } from '../config/application.config';
+import HttpClient from "./httpClient";
+import { USER_SERVICE_URL } from "../config/application.config";
 
 class UserService {
   private httpClient: HttpClient;
@@ -14,7 +14,7 @@ class UserService {
         `/api/users/by-email/${email}`,
         {
           headers: {
-            Authorization: authorization || '',
+            Authorization: authorization || "",
           },
         }
       );
@@ -26,11 +26,14 @@ class UserService {
 
   async getUserById(userId: string, authorization?: string) {
     try {
-      const response = await this.httpClient.get(
-        `/api/users/${userId}`,
+      const response = await this.httpClient.post(
+        `/api/users/check-exists`,
+        {
+          user_id: userId,
+        },
         {
           headers: {
-            Authorization: authorization || '',
+            Authorization: authorization || "",
           },
         }
       );

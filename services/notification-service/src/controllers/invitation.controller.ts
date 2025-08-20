@@ -31,9 +31,7 @@ const createBoardInvitation = async (req: Request, res: Response) => {
       throw new UnAuthenticatedError("it's not your board");
     }
 
-    const recipientUserResponse = await userService.getUserById(recipient_id)
-    const recipientUser = recipientUserResponse.user;
-
+    const recipientUser = await userService.getUserById(recipient_id)
     if (!recipientUser) {
       throw new NotFoundError("Not found recipient user");
     }
@@ -57,9 +55,9 @@ const createBoardInvitation = async (req: Request, res: Response) => {
     // }
 
     await Invitation.create({
-      recipient_id: recipientUser?.id,
+      recipient_id: recipientUser?.user_id,
       sender_id: req?.user?.userId,
-      board_id,
+      board_id, 
     });
 
     // try {
@@ -74,9 +72,9 @@ const createBoardInvitation = async (req: Request, res: Response) => {
     //   console.error("Failed to emit invitation sent event:", error);
     // }
 
-    // return res.status(StatusCodes.OK).json({
-    //   msg: `Invited ${recipientUser?.displayName} to ${board.board_name} board`,
-    // });
+    return res.status(StatusCodes.OK).json({
+      msg: `Invited ${recipientUser?.display_name} to ${board.board_name} board`,
+    });
   } catch (error: any) {
     if (error.response?.status === 404) {
       throw new NotFoundError("Board or user not found");

@@ -47,4 +47,48 @@ const getCurrentUser = async (req: Request, res: Response) => {
   res.status(StatusCodes.OK).json({ user });
 };
 
-export { getUserById, getUserByEmail, getCurrentUser };
+const checkUserExists = async (req: Request, res: Response) => {
+  const { user_id } = req.body;
+  
+  if (!user_id) {
+    return res.status(StatusCodes.BAD_REQUEST).json({ 
+      exists: false, 
+      message: "user_id is required" 
+    });
+  }
+
+  const user = await User.findOne({
+    where: { id: user_id },
+    attributes: ["id","displayName"]
+  });
+
+  res.status(StatusCodes.OK).json({ 
+    exists: !!user,
+    user_id: user_id,
+    display_name:user?.displayName
+  });
+};
+
+const checkEmailExists = async (req: Request, res: Response) => {
+  const { email } = req.body;
+  
+  if (!email) {
+    return res.status(StatusCodes.BAD_REQUEST).json({ 
+      exists: false, 
+      message: "email is required" 
+    });
+  }
+
+ const user = await User.findOne({
+    where: { email: email },
+    attributes: ["email","displayName"]
+  });
+
+  res.status(StatusCodes.OK).json({ 
+    exists: !!user,
+    email: email,
+    display_name:user?.displayName
+  });
+};
+
+export { getUserById, getUserByEmail, getCurrentUser, checkUserExists, checkEmailExists };

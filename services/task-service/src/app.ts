@@ -9,8 +9,6 @@ import errorHandlerMiddleware from "./middlewares/error-handler";
 import notFound from "./middlewares/not-found";
 import taskRoutes from "./routes/task.route";
 
-import Task from "./models/Task";
-
 const app = express();
  
 const limiter = rateLimit({
