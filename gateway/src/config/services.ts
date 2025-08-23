@@ -31,14 +31,14 @@ export const ROUTES = [
     path: '/api/auth',
     target: SERVICES.USER_SERVICE.url,
     pathRewrite: {
-      '^/api/auth': '/api/auth'
+      '^/api/auth': '/auth'
     }
   },
   {
     path: '/api/users',
     target: SERVICES.USER_SERVICE.url,
     pathRewrite: {
-      '^/api/users': '/api/users'
+      '^/api/users': '/users'
     }
   },
   {

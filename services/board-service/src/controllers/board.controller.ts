@@ -3,13 +3,17 @@ import { StatusCodes } from "http-status-codes";
 import Board from "../models/Board";
 import Column from "../models/Column";
 import BoardMembers from "../models/BoardMembers";
-import { BadRequestError, UnAuthenticatedError, NotFoundError } from "../errors";
+import {
+  BadRequestError,
+  UnAuthenticatedError,
+  NotFoundError,
+} from "../errors";
 import "express-async-errors";
 import { Op } from "sequelize";
 import notificationService from "../services/notificationService";
 
 const createBoard = async (req: Request, res: Response) => {
-  const { board_name, key, description , invitedMembers } = req.body;
+  const { board_name, key, description, invitedMembers } = req.body;
   if (!board_name || !key || typeof req.user?.userId === "undefined") {
     throw new BadRequestError("Please provide all value");
   }
@@ -25,7 +29,7 @@ const createBoard = async (req: Request, res: Response) => {
     if (invitedMembers && invitedMembers.length > 0) {
       try {
         const transformedMembers = invitedMembers.map(
-          (member : { id : string}) => ({
+          (member: { id: string }) => ({
             recipient_id: member.id,
           })
         );
@@ -63,10 +67,10 @@ const createBoard = async (req: Request, res: Response) => {
       },
     ];
     await Column.bulkCreate(columns);
-    
+
     return res.status(StatusCodes.CREATED).json({
       msg: "Created your board successfully",
-      board: newBoard
+      board: newBoard,
     });
   } catch (err) {
     throw err;
@@ -87,7 +91,13 @@ const getAllBoards = async (req: Request, res: Response) => {
       include: [
         {
           model: Board,
-          attributes: [["id", "board_id"], "board_name", "description", "key", "owner_id"],
+          attributes: [
+            ["id", "board_id"],
+            "board_name",
+            "description",
+            "key",
+            "owner_id",
+          ],
           where: {
             board_name: {
               [Op.like]: `%${query ? query : ""}%`,
@@ -193,7 +203,7 @@ const addBoardMember = async (req: Request, res: Response) => {
   }
 
   const board = await Board.findOne({
-    where: { id: board_id }
+    where: { id: board_id },
   });
 
   if (!board) {
@@ -201,11 +211,13 @@ const addBoardMember = async (req: Request, res: Response) => {
   }
 
   const existingMember = await BoardMembers.findOne({
-    where: { user_id, board_id }
+    where: { user_id, board_id },
   });
 
   if (existingMember) {
-    return res.status(StatusCodes.OK).json({ msg: "User is already a member of this board" });
+    return res
+      .status(StatusCodes.OK)
+      .json({ msg: "User is already a member of this board" });
   }
 
   await BoardMembers.create({ user_id, board_id });
@@ -235,12 +247,12 @@ const checkBoardMembership = async (req: Request, res: Response) => {
   const { board_id, user_id } = req.params;
 
   const member = await BoardMembers.findOne({
-    where: { board_id, user_id }
+    where: { board_id,user_id },
   });
 
   if (!member) {
-    return res.status(StatusCodes.NOT_FOUND).json({ 
-      message: "User is not a member of this board" 
+    return res.status(StatusCodes.NOT_FOUND).json({
+      message: "User is not a member of this board",
     });
   }
 

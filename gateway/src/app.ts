@@ -2,7 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import rateLimit from 'express-rate-limit';
 import dotenv from 'dotenv';
-import { ROUTES, WEBSOCKET_CONFIG } from './config/services';
+import { ROUTES, WEBSOCKET_CONFIG, SERVICES } from './config/services';
 import { createServiceProxy } from './middleware/proxy';
 import { healthCheckHandler } from './middleware/healthCheck';
 import { errorHandler, notFound } from './middlewares/error-handler';
@@ -48,10 +48,19 @@ app.use(WEBSOCKET_CONFIG.path, createServiceProxy({
 // API Gateway routes
 ROUTES.forEach(route => {
   console.log(`Setting up proxy: ${route.path} -> ${route.target}`);
-  app.use(route.path, createServiceProxy({
+  console.log("target : " , route.target)
+  console.log("pathRewrite : " , route.pathRewrite)
+  
+  const proxyMiddleware = createServiceProxy({
     target: route.target,
     pathRewrite: route.pathRewrite
-  }));
+  });
+  
+  app.use(route.path, (req, res, next) => {
+    console.log(`[DEBUG] Route matched: ${route.path} for ${req.method} ${req.url}`);
+    console.log(`[DEBUG] Will proxy to: ${route.target}${req.url.replace(new RegExp(Object.keys(route.pathRewrite)[0]), Object.values(route.pathRewrite)[0])}`);
+    proxyMiddleware(req, res, next);
+  });
 });
 
 // Welcome endpoint
@@ -71,8 +80,48 @@ app.get('/', (req, res) => {
 app.use(notFound);
 app.use(errorHandler);
 
-const start = () => {
+const start = async () => {
   try {
+    // Test connectivity to services
+    console.log('🔍 Testing service connectivity...');
+    const http = require('http');
+    
+    for (const service of Object.values(SERVICES)) {
+      try {
+        const url = new URL(service.url);
+        const options = {
+          hostname: url.hostname,
+          port: url.port,
+          path: '/health',
+          method: 'GET',
+          timeout: 2000
+        };
+        
+        await new Promise((resolve, reject) => {
+          const req = http.request(options, (res: any) => {
+            console.log(`✅ ${service.name} is reachable at ${service.url}`);
+            resolve(res);
+          });
+          
+          req.on('error', (err: any) => {
+            console.log(`❌ ${service.name} is NOT reachable at ${service.url} - ${err.message}`);
+            resolve(null);
+          });
+          
+          req.on('timeout', () => {
+            console.log(`⏱️ ${service.name} timeout at ${service.url}`);
+            req.destroy();
+            resolve(null);
+          });
+          
+          req.setTimeout(2000);
+          req.end();
+        });
+      } catch (err) {
+        console.log(`❌ Error testing ${service.name}: ${err}`);
+      }
+    }
+    
     app.listen(PORT, () => {
       console.log(`🌐 API Gateway is running on port ${PORT}`);
       console.log(`📊 Health check available at http://localhost:${PORT}/health`);

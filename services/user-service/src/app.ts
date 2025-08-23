@@ -35,8 +35,29 @@ app.get("/health", (req: Request, res: Response) => {
   });
 });
 
-app.use("/api/auth", authRouter);
-app.use("/api/users", userRouter);
+// Test route for debugging
+app.get("/auth/test", (req: Request, res: Response) => {
+  console.log(`[${SERVICE_NAME}] TEST GET /auth/test received`);
+  res.json({
+    message: "Auth test route works!",
+    service: SERVICE_NAME,
+    timestamp: new Date().toISOString(),
+  });
+});
+
+app.post("/auth/test", (req: Request, res: Response) => {
+  console.log(`[${SERVICE_NAME}] TEST POST /auth/test received`);
+  console.log(`[${SERVICE_NAME}] Body:`, req.body);
+  res.json({
+    message: "Auth POST test route works!",
+    received: req.body,
+    service: SERVICE_NAME,
+    timestamp: new Date().toISOString(),
+  });
+});
+
+app.use("/auth", authRouter);
+app.use("/users", userRouter);
 
 app.use(notFound);
 app.use(errorHandler);

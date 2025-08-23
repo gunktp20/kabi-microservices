@@ -4,7 +4,7 @@ import path from "path";
 dotenv.config();
 
 const PORT = process.env.USER_SERVICE_PORT || 3001;
-const SERVICE_NAME = "user-service";
+const SERVICE_NAME = "user-service"; 
 
 const CLIENT_URL = process.env.CLIENT_URL || "";
 const SECRET_VERIFY_EMAIL = process.env.SECRET_VERIFY_EMAIL || "";
