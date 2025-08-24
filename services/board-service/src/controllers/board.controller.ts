@@ -11,6 +11,7 @@ import {
 import "express-async-errors";
 import { Op } from "sequelize";
 import notificationService from "../services/notificationService";
+import { getUsersByIds , getUserById} from "../services/userService";
 
 const createBoard = async (req: Request, res: Response) => {
   const { board_name, key, description, invitedMembers } = req.body;
@@ -23,7 +24,7 @@ const createBoard = async (req: Request, res: Response) => {
       board_name,
       key,
       description: description || null,
-      owner_id: req.user?.userId,
+      owner_id: req.user?.userId, 
     });
 
     if (invitedMembers && invitedMembers.length > 0) {
@@ -99,7 +100,7 @@ const getAllBoards = async (req: Request, res: Response) => {
             "owner_id",
           ],
           where: {
-            board_name: {
+            board_name: { 
               [Op.like]: `%${query ? query : ""}%`,
             },
           },
@@ -120,13 +121,6 @@ const getAllBoards = async (req: Request, res: Response) => {
 
 const getBoardById = async (req: Request, res: Response) => {
   const { board_id } = req.params;
-  // const isMemberInBoard = await BoardMembers.findOne({
-  //   where: { user_id: req.user?.userId, board_id },
-  // });
-
-  // if (!isMemberInBoard) {
-  //   throw new UnAuthenticatedError("Your are not a member in the board");
-  // }
 
   try {
     const board = await Board.findOne({
@@ -145,9 +139,23 @@ const getBoardById = async (req: Request, res: Response) => {
       throw new NotFoundError("Board not found");
     }
 
-    const members = await BoardMembers.findAll({
+    const boardMembers = await BoardMembers.findAll({
       where: { board_id },
       attributes: ["user_id"],
+    });
+
+    // Extract user IDs and fetch user details from user-service
+    const userIds = boardMembers.map(member => member.user_id);
+    const memberDetails = await getUsersByIds(userIds, req.headers.authorization);
+
+    // Combine board member data with user details
+    const members = boardMembers.map(member => {
+      const userDetail = memberDetails.find(user => user.id === member.user_id);
+      return {
+        user_id: member.user_id,
+        email: userDetail?.email || '',
+        displayName: userDetail?.displayName || `User ${member.user_id}`
+      };
     });
 
     return res.status(StatusCodes.OK).json({ board, members });
