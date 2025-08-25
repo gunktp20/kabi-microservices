@@ -22,11 +22,11 @@ export const authenticateUser = async (
   next: NextFunction
 ) => {
   const authHeader = req.headers.authorization;
-
+  
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
     throw new UnAuthenticatedError("Authentication Invalid");
   }
-
+  
   const token = authHeader.split(" ")[1];
 
   try {

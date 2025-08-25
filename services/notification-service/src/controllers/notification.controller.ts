@@ -54,7 +54,11 @@ const getAllNotifications = async (req: Request, res: Response) => {
 
           return {
             ...invitation.toJSON(),
-            sender: senderResponse.user,
+            // sender: senderResponse.user,
+            sender: {
+              id: senderResponse?.user_id,
+              displayName:senderResponse?.display_name,
+            },
             recipient: recipientResponse.user,
             board: boardResponse.board
           };

@@ -17,6 +17,7 @@ class BoardMembers
   public id!: string;
   public user_id!: string;
   public board_id!: string;
+  public board?: Board;
 }
 
 BoardMembers.init(

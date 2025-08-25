@@ -11,7 +11,7 @@ class UserService {
   async getUserByEmail(email: string, authorization?: string) {
     try {
       const response = await this.httpClient.get(
-        `/api/users/by-email/${email}`,
+        `/users/check-email-exists${email}`,
         {
           headers: {
             Authorization: authorization || "",
@@ -27,7 +27,7 @@ class UserService {
   async getUserById(userId: string, authorization?: string) {
     try {
       const response = await this.httpClient.post(
-        `/api/users/check-exists`,
+        `/users/check-exists`,
         {
           user_id: userId,
         },

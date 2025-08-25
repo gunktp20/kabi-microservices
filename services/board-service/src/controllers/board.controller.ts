@@ -18,7 +18,10 @@ const createBoard = async (req: Request, res: Response) => {
   if (!board_name || !key || typeof req.user?.userId === "undefined") {
     throw new BadRequestError("Please provide all value");
   }
-
+ 
+  console.log("===============================================================")
+  console.log(description)
+  console.log("===============================================================")
   try {
     const newBoard = await Board.create({
       board_name,
@@ -93,7 +96,7 @@ const getAllBoards = async (req: Request, res: Response) => {
         {
           model: Board,
           attributes: [
-            ["id", "board_id"],
+            "id",
             "board_name",
             "description",
             "key",
@@ -109,11 +112,47 @@ const getAllBoards = async (req: Request, res: Response) => {
       limit,
       offset,
     });
+
+    // Get unique owner IDs from all boards
+    const ownerIds = Array.from(new Set(
+      rows.map(row => row.board?.owner_id).filter(Boolean)
+    )) as string[];
+
+    // Fetch owner details from user service
+    const ownerDetails = await getUsersByIds(ownerIds, req.headers.authorization);
+
+    // Enhance boards with owner information
+    const boardsWithOwners = rows.map(row => {
+      const boardData = row.board
+      if (boardData) {
+        const owner = ownerDetails.find(user => user.id === boardData.owner_id);
+        return {
+          id: row.id,
+          board: {
+            board_id: boardData.id,
+            board_name: boardData.board_name,
+            description: boardData.description,
+            key: boardData.key,
+            owner_id: boardData.owner_id,
+            owner: owner ? {
+              id: owner.id,
+              email: owner.email,
+              displayName: owner.displayName
+            } : null
+          }
+        };
+      }
+      return {
+        id: row.id,
+        Board: null
+      };
+    });
+
     const totalPages = Math.ceil(count / limit);
 
     return res
       .status(StatusCodes.OK)
-      .json({ boards: rows, numOfPage, totalPages });
+      .json({ boards: boardsWithOwners, numOfPage, totalPages });
   } catch (err) {
     throw err;
   }

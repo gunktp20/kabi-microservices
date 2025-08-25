@@ -17,6 +17,10 @@ class NotificationService {
     }>,
     authorization?: string
   ) {
+
+    console.log("==============================================================================")
+    console.log(authorization)
+    console.log("==============================================================================")
     try {
       const response = await this.httpClient.post(
         `/api/invitations/${boardId}/bulk`,
