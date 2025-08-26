@@ -118,12 +118,12 @@ export const setupRedisEventHandlers = (io: Server) => {
   const subscribeToChannels = async () => {
     try {
       // System-wide events
-      await redisSubscriber.subscribe('system:maintenance');
-      await redisSubscriber.subscribe('system:announcement');
+      // await redisSubscriber.subscribe('system:maintenance');
+      // await redisSubscriber.subscribe('system:announcement');
       
-      // Notification events
-      await redisSubscriber.subscribe('notification:create');
-      await redisSubscriber.subscribe('notification:broadcast');
+      // // Notification events
+      // await redisSubscriber.subscribe('notification:create');
+      // await redisSubscriber.subscribe('notification:broadcast');
       
       console.log('✅ Subscribed to Redis channels for cross-service events');
       
