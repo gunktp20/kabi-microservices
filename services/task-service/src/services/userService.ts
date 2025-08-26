@@ -9,9 +9,26 @@ class UserService {
   }
 
   async getUserByEmail(email: string, authorization?: string) {
+    console.log(email)
+    console.log(email)
+    console.log(email)
+    console.log(email)
+    console.log(email)
+    console.log(email)
+    console.log(email)
+    console.log(email)
+    console.log(email)
+    console.log(email)
+    console.log(email)
+    console.log(email)
+    console.log(email)
+    console.log(email)
     try {
-      const response = await this.httpClient.get(
-        `/api/users/by-email/${email}`,
+      const response = await this.httpClient.post(
+        `/users/check-email-exists`,
+        {
+          email:email
+        },
         {
           headers: {
             Authorization: authorization || '',
@@ -24,13 +41,16 @@ class UserService {
     }
   }
 
-  async getUserById(userId: string, authorization?: string) {
+   async getUserById(userId: string, authorization?: string) {
     try {
-      const response = await this.httpClient.get(
-        `/api/users/${userId}`,
+      const response = await this.httpClient.post(
+        `/users/check-exists`,
+        {
+          user_id: userId,
+        },
         {
           headers: {
-            Authorization: authorization || '',
+            Authorization: authorization || "",
           },
         }
       );

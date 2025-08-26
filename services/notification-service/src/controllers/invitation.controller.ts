@@ -84,6 +84,13 @@ const createBoardInvitation = async (req: Request, res: Response) => {
 const acceptInvitation = async (req: Request, res: Response) => {
   const { sender_id, board_id } = req.body;
   const { invitation_id } = req.params;
+  console.log(
+    "============================================================================"
+  );
+  console.log("Accept Invitation");
+  console.log(
+    "============================================================================"
+  );
 
   const invitation = await Invitation.findOne({
     where: {
@@ -98,9 +105,20 @@ const acceptInvitation = async (req: Request, res: Response) => {
     throw new NotFoundError("Not found your invitation");
   }
 
-  console.log("============================================================================")
-  console.log("Accept Invitation")
-  console.log("============================================================================")
+  console.log(
+    "============================================================================"
+  );
+  console.log("Accept Invitation");
+  console.log(
+    "============================================================================"
+  );
+  console.log(
+    "============================================================================"
+  );
+  console.log("Accept Invitation");
+  console.log(
+    "============================================================================"
+  );
 
   invitation.status = "accepted";
 
@@ -227,7 +245,7 @@ const createBulkBoardInvitations = async (req: Request, res: Response) => {
     for (const member of invitedMembers) {
       const { recipient_id } = member;
 
-      console.log(member)
+      console.log(member);
 
       if (!recipient_id) {
         results.push({
@@ -238,7 +256,7 @@ const createBulkBoardInvitations = async (req: Request, res: Response) => {
         continue;
       }
 
-        console.log("33333")
+      console.log("33333");
 
       try {
         const invitationWasSent = await Invitation.findOne({
@@ -254,8 +272,8 @@ const createBulkBoardInvitations = async (req: Request, res: Response) => {
         );
         const recipientUser = recipientUserResponse;
 
-        console.log(recipientUserResponse)
-          console.log("444444")
+        console.log(recipientUserResponse);
+        console.log("444444");
 
         if (!recipientUser) {
           results.push({
@@ -275,7 +293,7 @@ const createBulkBoardInvitations = async (req: Request, res: Response) => {
           });
         }
 
-          console.log("love may")
+        console.log("love may");
 
         // try {
         //   await axios.post(`${REALTIME_SERVICE_URL}/api/events/invitation-sent`, {
@@ -295,9 +313,9 @@ const createBulkBoardInvitations = async (req: Request, res: Response) => {
           message: `Invited ${recipientUser.displayName} to ${board.board_name} board`,
         });
       } catch (memberError: any) {
-        console.log("9999999")
+        console.log("9999999");
 
-        console.log(memberError)
+        console.log(memberError);
         results.push({
           recipient_id,
           success: false,

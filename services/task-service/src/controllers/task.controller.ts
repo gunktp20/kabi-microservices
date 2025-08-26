@@ -40,7 +40,7 @@ const createTask = async (req: Request, res: Response) => {
     }
     throw error;
   }
-  
+
   try {
     const newTask = await Task.create({
       description,
@@ -73,7 +73,7 @@ const getTasksByBoardId = async (req: Request, res: Response) => {
   try {
     const boardMember = await boardService.checkBoardMembership(
       req.params.board_id,
-      req.user?.userId || '',
+      req.user?.userId || "",
       req.headers.authorization
     );
 
@@ -92,7 +92,31 @@ const getTasksByBoardId = async (req: Request, res: Response) => {
       where: { board_id: req.params.board_id },
       order: [["position", "ASC"]],
     });
-    return res.status(StatusCodes.OK).json(tasks);
+
+    const enrichedTasks = await Promise.all(
+      tasks.map(async (task) => {
+        try {
+          const assigneeResponse = await userService.getUserById(
+            task.assignee_id,
+            req.headers.authorization as string
+          );
+
+          return {
+            ...task.toJSON(),
+            assignee: {
+              id: assigneeResponse?.user_id,
+              displayName: assigneeResponse?.display_name,
+            },
+          };
+        } catch (error) {
+          console.error("Error enriching task:", error);
+          return task.toJSON();
+        }
+      })
+    );
+
+    console.log("enrichedTasks", enrichedTasks);
+    return res.status(StatusCodes.OK).json(enrichedTasks);
   } catch (err) {
     throw err;
   }
@@ -179,7 +203,7 @@ const updateTaskDescription = async (req: Request, res: Response) => {
   try {
     const boardMember = await boardService.checkBoardMembership(
       task.board_id,
-      req.user?.userId || '',
+      req.user?.userId || "",
       req.headers.authorization
     );
 
@@ -220,7 +244,7 @@ const deleteTaskById = async (req: Request, res: Response) => {
   }
   try {
     const boardMember = await boardService.checkBoardMembership(
-      task?.board_id || '',
+      task?.board_id || "",
       req.user.userId,
       req.headers.authorization
     );
@@ -234,7 +258,7 @@ const deleteTaskById = async (req: Request, res: Response) => {
     }
     throw error;
   }
-  
+
   // try {
   //   await notificationService.deleteAssignmentsByTaskId(
   //     task_id,
@@ -261,6 +285,51 @@ const deleteTaskById = async (req: Request, res: Response) => {
   res.status(StatusCodes.OK).json({ msg: "Deleted your task" });
 };
 
+const getTaskById = async (req: Request, res: Response) => {
+  const { task_id } = req.params;
+
+    // id: {
+    //     type: DataTypes.UUID,
+    //     defaultValue: DataTypes.UUIDV4,
+    //     primaryKey: true,
+    //   },
+    //   description: {
+    //     type: DataTypes.STRING,
+    //     allowNull: false,
+    //   },
+    //   sequence: {
+    //     type: DataTypes.INTEGER,
+    //     allowNull: true,
+    //   },
+    //   position: {
+    //     type: DataTypes.INTEGER,
+    //     allowNull: true,
+    //   },
+    //   board_id: {
+    //     type: DataTypes.UUID,
+    //     allowNull: false,
+    //   },
+    //   column_id: {
+    //     type: DataTypes.UUID,
+    //     allowNull: false,
+    //   },
+    //   assignee_id: {
+    //     type: DataTypes.UUID,
+    //     allowNull: false,
+    //   },
+
+  const task = await Task.findOne({
+    where: { id: task_id },
+    attributes: ["id", "description", "sequence", "position","board_id","column_id","assignee_id"],
+  });
+
+  if (!task) {
+    throw new NotFoundError("Task not found");
+  }
+
+  res.status(StatusCodes.OK).json({ task });
+};
+
 const assignToMember = async (req: Request, res: Response) => {
   const { task_id } = req.params;
   const { recipient_email } = req.body;
@@ -272,7 +341,7 @@ const assignToMember = async (req: Request, res: Response) => {
   const task = await Task.findOne({
     where: { id: task_id },
   });
-  
+
   if (!task) {
     throw new NotFoundError("Not found your task");
   }
@@ -282,19 +351,50 @@ const assignToMember = async (req: Request, res: Response) => {
       recipient_email,
       req.headers.authorization
     );
-    const recipientUser = userResponse.user;
+    const recipientUser = userResponse;
+    console.log("userResponse : " ,userResponse)
+    console.log("userResponse : " ,userResponse)
+    console.log("userResponse : " ,userResponse)
+    console.log("userResponse : " ,userResponse)
+    console.log("userResponse : " ,userResponse)
+    console.log("userResponse : " ,userResponse)
+    console.log("userResponse : " ,userResponse)
+    console.log("userResponse : " ,userResponse)
+    console.log("userResponse : " ,userResponse)
+    console.log("userResponse : " ,userResponse)
+    console.log("userResponse : " ,userResponse)
+    console.log("userResponse : " ,userResponse)
 
-    if (task.assignee_id === recipientUser?.id) {
+    console.log("==================================================================")
+    console.log("task.assignee_id : ", task.assignee_id)
+    console.log("==================================================================")
+     console.log("recipientUser?.id : ", recipientUser?.id)
+    console.log("==================================================================")
+
+     console.log("==================================================================")
+    console.log("task : ", task)
+    console.log("==================================================================")
+     console.log("recipientUser : ", recipientUser)
+    console.log("==================================================================")
+
+    if (task.assignee_id === recipientUser?.user_id) {
       return res.status(StatusCodes.OK).json({ msg: "task was assigned" });
     }
 
     if (!recipientUser) {
+      console.log("XXXXXXXXXXXXXXXx")
+      console.log("XXXXXXXXXXXXXXXx")
+      console.log("XXXXXXXXXXXXXXXx")
+      console.log("XXXXXXXXXXXXXXXx")
+      console.log("XXXXXXXXXXXXXXXx")
+      console.log("XXXXXXXXXXXXXXXx")
+      console.log("XXXXXXXXXXXXXXXx")
       throw new NotFoundError("Not found recipient user");
     }
 
     const senderBoardMember = await boardService.checkBoardMembership(
       task.board_id,
-      req.user?.userId || '',
+      req.user?.userId || "",
       req.headers.authorization
     );
 
@@ -304,34 +404,49 @@ const assignToMember = async (req: Request, res: Response) => {
 
     const recipientBoardMember = await boardService.checkBoardMembership(
       task.board_id,
-      recipientUser?.id || '',
+      recipientUser?.id || "",
       req.headers.authorization
     );
 
     if (!recipientBoardMember) {
+       console.log("SSSSSSSSSSSSSSSSSSSSS")
+      console.log("SSSSSSSSSSSSSSSSSSSSS")
+      console.log("SSSSSSSSSSSSSSSSSSSSS")
+      console.log("SSSSSSSSSSSSSSSSSSSSS")
+      console.log("SSSSSSSSSSSSSSSSSSSSS")
+      console.log("SSSSSSSSSSSSSSSSSSSSS")
+      console.log("SSSSSSSSSSSSSSSSSSSSS")
       throw new UnAuthenticatedError("recipient user is not board member");
     }
 
-    if (recipientUser?.id === task.assignee_id) {
+    if (recipientUser?.user_id === task.assignee_id) {
+
+       console.log("pppppppppppppp")
+      console.log("pppppppppppppp")
+      console.log("pppppppppppppp")
+      console.log("pppppppppppppp")
+      console.log("pppppppppppppp")
+      console.log("pppppppppppppp")
+      console.log("pppppppppppppp")
       return res.status(StatusCodes.OK).json({ msg: "task was assigned" });
     }
 
     await Task.update(
       {
-        assignee_id: recipientUser?.id,
+        assignee_id: recipientUser?.user_id,
       },
       {
         where: { id: task_id },
       }
     );
 
-    if (recipientUser?.id === req.user.userId) {
+    if (recipientUser?.user_id === req.user.userId) {
       return res.status(StatusCodes.OK).json({ msg: "task was assigned" });
     }
 
     const oldAssignment = await notificationService.getAssignmentByTaskAndUser(
       task_id,
-      recipientUser?.id || '',
+      recipientUser?.user_id || "",
       req.headers.authorization
     );
 
@@ -342,29 +457,40 @@ const assignToMember = async (req: Request, res: Response) => {
       );
     }
 
-    await notificationService.createAssignment({
-      assignee_id: recipientUser?.id || '',
-      sender_id: req.user?.userId || '',
-      task_id: task.id,
-      board_id: task.board_id
-    }, req.headers.authorization);
+       console.log("pppppppppppppp")
+      console.log("pppppppppppppp")
+      console.log("pppppppppppppp")
+      console.log("pppppppppppppp")
+      console.log("pppppppppppppp")
+      console.log("pppppppppppppp")
+      console.log("pppppppppppppp")
 
-    try {
-      await axios.post(`${REALTIME_SERVICE_URL}/api/events/task-assigned`, {
-        taskId: task.id,
-        assigneeId: recipientUser.id,
-        senderId: req.user.userId,
-        boardId: task.board_id,
-        taskDescription: task.description,
-      });
-    } catch (error) {
-      console.error("Failed to emit task assigned event:", error);
-    }
+    await notificationService.createAssignment(
+      {
+        assignee_id: recipientUser?.user_id || "",
+        sender_id: req.user?.userId || "",
+        task_id: task.id,
+        board_id: task.board_id,
+      },
+      req.headers.authorization
+    );
+
+    // try {
+    //   await axios.post(`${REALTIME_SERVICE_URL}/api/events/task-assigned`, {
+    //     taskId: task.id,
+    //     assigneeId: recipientUser.user_id,
+    //     senderId: req.user.userId,
+    //     boardId: task.board_id,
+    //     taskDescription: task.description, 
+    //   });
+    // } catch (error) {
+    //   console.error("Failed to emit task assigned event:", error);
+    // }
 
     res.status(StatusCodes.OK).json({ msg: "task was assigned" });
   } catch (error: any) {
     if (error.response?.status === 404) {
-      throw new NotFoundError("Not found recipient user");
+      throw new NotFoundError("Not found recipient user X");
     }
     throw error;
   }
@@ -377,4 +503,5 @@ export {
   updateTasksOrder,
   updateTaskDescription,
   assignToMember,
+  getTaskById
 };

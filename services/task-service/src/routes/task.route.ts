@@ -6,6 +6,7 @@ import {
   updateTasksOrder,
   updateTaskDescription,
   assignToMember,
+  getTaskById
 } from "../controllers/task.controller";
 import { authenticateUser } from "../middlewares/auth";
 
@@ -23,6 +24,7 @@ router.route("/board/:board_id/order")
   .patch(updateTasksOrder);
 
 router.route("/:task_id")
+  .get(getTaskById)
   .patch(updateTaskDescription)
   .delete(deleteTaskById);
 

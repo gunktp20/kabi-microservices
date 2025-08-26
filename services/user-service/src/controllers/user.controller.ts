@@ -60,12 +60,13 @@ const checkUserExists = async (req: Request, res: Response) => {
 
   const user = await User.findOne({
     where: { id: user_id },
-    attributes: ["id", "displayName"],
+    attributes: ["id", "email", "displayName"],
   });
 
   res.status(StatusCodes.OK).json({
     exists: !!user,
     user_id: user_id,
+    email: user?.email,
     display_name: user?.displayName,
   });
 };
@@ -82,11 +83,12 @@ const checkEmailExists = async (req: Request, res: Response) => {
 
   const user = await User.findOne({
     where: { email: email },
-    attributes: ["email", "displayName"],
+    attributes: ["id", "email", "displayName"],
   });
 
   res.status(StatusCodes.OK).json({
     exists: !!user,
+    user_id:user?.id,
     email: email,
     display_name: user?.displayName,
   });
@@ -120,12 +122,12 @@ const getUsers = async (req: Request, res: Response) => {
   const limitNumber = Math.min(
     100,
     Math.max(1, parseInt(limit as string) || 10)
-  ); 
+  );
   const offset = (pageNumber - 1) * limitNumber;
 
   const whereClause: any = {};
 
-   if (search && typeof search === 'string' && search.trim()) {
+  if (search && typeof search === "string" && search.trim()) {
     whereClause[Op.or] = [
       { email: { [Op.iLike]: `%${search.trim()}%` } },
       { displayName: { [Op.iLike]: `%${search.trim()}%` } },
@@ -209,5 +211,5 @@ export {
   checkUserExists,
   checkEmailExists,
   getUsersByIds,
-  getUsers
+  getUsers,
 };

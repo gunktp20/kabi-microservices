@@ -47,6 +47,11 @@ const deleteAssignmentsByTaskId = async (req: Request, res: Response) => {
 const getAssignmentByTaskAndUser = async (req: Request, res: Response) => {
   const { task_id, user_id } = req.params;
 
+  console.log("==========================================================================")
+  console.log("task_id : " ,task_id)
+  console.log("user_id : " ,user_id)
+  console.log("==========================================================================")
+
   if (!task_id || !user_id) {
     throw new BadRequestError("Please provide task_id and user_id");
   }

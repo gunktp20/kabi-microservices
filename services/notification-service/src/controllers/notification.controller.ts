@@ -71,6 +71,10 @@ const getAllNotifications = async (req: Request, res: Response) => {
 
     const enrichedAssignments = await Promise.all(
       assignments.map(async (assignment) => {
+
+        console.log("=====================================================================")
+          console.log("assignment.task_id : " , assignment.task_id )
+          console.log("=====================================================================")
         try {
           const [senderResponse, assigneeResponse, taskResponse] = await Promise.all([
             userService.getUserById(assignment.sender_id, req.headers.authorization as string),
@@ -78,11 +82,24 @@ const getAllNotifications = async (req: Request, res: Response) => {
             taskService.getTaskById(assignment.task_id, req.headers.authorization as string)
           ]);
 
+          console.log("Before")
+          console.log("Before")
+          console.log("Before")
+          console.log("Before")
+          console.log("Before")
+          console.log("Before")
+          console.log("Before")
+          console.log("Before")
           const boardResponse = await boardService.getBoardById(assignment.board_id, req.headers.authorization as string);
-
+          console.log("=====================================================================")
+          console.log("sender response : " , senderResponse)
+          console.log("=====================================================================")
           return {
             ...assignment.toJSON(),
-            sender: senderResponse.user,
+              sender: {
+              id: senderResponse?.user_id,
+              displayName:senderResponse?.display_name,
+            },
             assignee: assigneeResponse.user,
             task: {
               ...taskResponse.task,

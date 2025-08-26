@@ -16,7 +16,7 @@ router.route("/")
   .post(createAssignment);
 
 router.route("/read")
-  .put(readAssignments);
+  .patch(readAssignments);
 
 router.route("/task/:task_id")
   .delete(deleteAssignmentsByTaskId);

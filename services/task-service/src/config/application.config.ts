@@ -16,5 +16,5 @@ export const JWT_PUBLIC_KEY = process.env.JWT_PUBLIC_KEY ||
 export const NODE_ENV = process.env.NODE_ENV || "development";
 export const REALTIME_SERVICE_URL = process.env.REALTIME_SERVICE_URL || "http://localhost:3004";
 export const BOARD_SERVICE_URL = process.env.BOARD_SERVICE_URL || "http://localhost:3002";
-export const NOTIFICATION_SERVICE_URL = process.env.NOTIFICATION_SERVICE_URL || "http://localhost:3005";
+export const NOTIFICATION_SERVICE_URL = process.env.NOTIFICATION_SERVICE_URL || "http://localhost:3004";
 export const USER_SERVICE_URL = process.env.USER_SERVICE_URL || "http://localhost:3001";
