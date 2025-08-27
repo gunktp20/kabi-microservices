@@ -10,6 +10,7 @@ import "express-async-errors";
 import { REALTIME_SERVICE_URL } from "../config/application.config";
 import boardService from "../services/boardService";
 import userService from "../services/userService";
+import axios from "axios"
 
 const createBoardInvitation = async (req: Request, res: Response) => {
   const { recipient_id } = req.body;
@@ -295,17 +296,17 @@ const createBulkBoardInvitations = async (req: Request, res: Response) => {
 
         console.log("love may");
 
-        // try {
-        //   await axios.post(`${REALTIME_SERVICE_URL}/api/events/invitation-sent`, {
-        //     recipientId: recipient_id,
-        //     senderId: req.user.userId,
-        //     boardId: board_id,
-        //     boardName: board.board_name,
-        //     senderDisplayName: recipientUser.displayName,
-        //   });
-        // } catch (error) {
-        //   console.error("Failed to emit invitation sent event:", error);
-        // }
+        try {
+          await axios.post(`${REALTIME_SERVICE_URL}/api/events/invitation-sent`, {
+            recipientId: recipient_id,
+            senderId: req.user.userId,
+            boardId: board_id,
+            boardName: board.board_name,
+            senderDisplayName: recipientUser.displayName,
+          });
+        } catch (error) {
+          console.error("Failed to emit invitation sent event:", error);
+        }
 
         results.push({
           recipient_id,
