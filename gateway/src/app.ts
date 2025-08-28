@@ -2,6 +2,8 @@ import express from 'express';
 import cors from 'cors';
 import rateLimit from 'express-rate-limit';
 import dotenv from 'dotenv';
+import http from 'http';
+import { createProxyMiddleware } from 'http-proxy-middleware';
 import { ROUTES, WEBSOCKET_CONFIG, SERVICES } from './config/services';
 import { createServiceProxy } from './middleware/proxy';
 import { healthCheckHandler } from './middleware/healthCheck';
@@ -10,6 +12,7 @@ import { errorHandler, notFound } from './middlewares/error-handler';
 dotenv.config();
 
 const app = express();
+const server = http.createServer(app);
 const PORT = process.env.GATEWAY_PORT || 3000;
 
 // CORS configuration
@@ -40,10 +43,15 @@ app.get('/health', healthCheckHandler);
 
 // WebSocket proxy for real-time service
 console.log(`Setting up WebSocket proxy: ${WEBSOCKET_CONFIG.path} -> ${WEBSOCKET_CONFIG.target}`);
-app.use(WEBSOCKET_CONFIG.path, createServiceProxy({
+const wsProxy = createProxyMiddleware({
   target: WEBSOCKET_CONFIG.target,
-  changeOrigin: WEBSOCKET_CONFIG.changeOrigin,
-}));
+  changeOrigin: true,
+  ws: true,
+  logLevel: 'debug',
+});
+
+app.use(WEBSOCKET_CONFIG.path, wsProxy);
+server.on('upgrade', wsProxy.upgrade);
 
 // API Gateway routes
 ROUTES.forEach(route => {
@@ -122,7 +130,7 @@ const start = async () => {
       }
     }
     
-    app.listen(PORT, () => {
+    server.listen(PORT, () => {
       console.log(`🌐 API Gateway is running on port ${PORT}`);
       console.log(`📊 Health check available at http://localhost:${PORT}/health`);
       console.log(`🔗 Available routes:`);

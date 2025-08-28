@@ -1,11 +1,14 @@
 import dotenv from "dotenv";
+import fs from "fs";
+import path from "path";
 dotenv.config();
 
 const PORT = process.env.REALTIME_SERVICE_PORT || 3005;
 const SERVICE_NAME = "realtime-service";
 
-const CLIENT_URL = process.env.CLIENT_URL || "http://localhost:3000";
-const JWT_SECRET_ACCESS = process.env.JWT_SECRET_ACCESS || "";
+const CLIENT_URL = process.env.CLIENT_URL || "http://localhost:5173";
+const JWT_PUBLIC_KEY = process.env.JWT_PUBLIC_KEY || 
+  fs.readFileSync(path.join(__dirname, '../../../keys/public_key.pem'), 'utf8');
 
 // Redis Configuration
 const REDIS_HOST = process.env.REDIS_HOST || "localhost";
@@ -22,7 +25,7 @@ export {
   PORT,
   SERVICE_NAME,
   CLIENT_URL,
-  JWT_SECRET_ACCESS,
+  JWT_PUBLIC_KEY,
   REDIS_HOST,
   REDIS_PORT,
   REDIS_PASSWORD,

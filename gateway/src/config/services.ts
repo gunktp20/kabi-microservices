@@ -82,6 +82,13 @@ export const ROUTES = [
     pathRewrite: {
       '^/api/invitations': '/api/invitations'
     }
+  },
+  {
+    path: '/api/realtime',
+    target: SERVICES.REALTIME_SERVICE.url,
+    pathRewrite: {
+      '^/api/realtime': '/api/events'
+    }
   }
 ];
 

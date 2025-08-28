@@ -8,6 +8,8 @@ import { initializeRedis } from './config/redis';
 import { setupSocketHandlers } from './events/socketManager';
 import { setupRedisEventHandlers } from './events/redisEventHandler';
 import { userManager } from './utils/userManager';
+import { setIOInstance } from './controllers/eventController';
+import eventRoutes from './routes/eventRoutes';
 
 dotenv.config();
 
@@ -21,6 +23,9 @@ app.use(cors({
 }));
 
 app.use(express.json());
+
+// API routes
+app.use('/api/events', eventRoutes);
 
 // Health check endpoint
 app.get('/health', (req, res) => {
@@ -62,6 +67,8 @@ const io = new SocketIOServer(server, {
 
 // Setup Socket.IO handlers
 setupSocketHandlers(io);
+// Set IO instance for event controller
+setIOInstance(io);
 
 const start = async () => {
   try {

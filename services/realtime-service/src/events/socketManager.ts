@@ -42,6 +42,8 @@ export const setupSocketHandlers = (io: Server) => {
       
       // Handle user status updates
       socket.on('user:status', (data: { status: 'active' | 'away' | 'busy' }) => {
+
+        console.log("XXXXXXXXXXXX")
         socket.broadcast.emit('user:status_changed', {
           userId: user.userId,
           status: data.status,
