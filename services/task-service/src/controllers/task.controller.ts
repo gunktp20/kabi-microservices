@@ -475,17 +475,33 @@ const assignToMember = async (req: Request, res: Response) => {
       req.headers.authorization
     );
 
-    // try {
-    //   await axios.post(`${REALTIME_SERVICE_URL}/api/events/task-assigned`, {
-    //     taskId: task.id,
-    //     assigneeId: recipientUser.user_id,
-    //     senderId: req.user.userId,
-    //     boardId: task.board_id,
-    //     taskDescription: task.description, 
-    //   });
-    // } catch (error) {
-    //   console.error("Failed to emit task assigned event:", error);
-    // }
+    // Get board and assignor info for realtime notification
+    try {
+      const boardResponse = await boardService.getBoardById(
+        task.board_id,
+        req.headers.authorization
+      );
+      const assignerResponse = await userService.getUserById(
+        req.user.userId,
+        req.headers.authorization as string
+      );
+
+      console.log("===========================================================================")
+      console.log("boardResponse : ",boardResponse )
+      console.log("===========================================================================")
+
+      await axios.post(`${REALTIME_SERVICE_URL}/api/events/task-assigned`, {
+        assigneeId: recipientUser.user_id,
+        assignerId: req.user.userId,
+        taskId: task.id,
+        taskName: task.description,
+        boardId: task.board_id,
+        boardName: boardResponse?.board?.board_name || "Unknown Board",
+        assignerDisplayName: assignerResponse?.display_name || "Unknown User"
+      });
+    } catch (error) {
+      console.error("Failed to emit task assigned event:", error);
+    }
 
     res.status(StatusCodes.OK).json({ msg: "task was assigned" });
   } catch (error: any) {

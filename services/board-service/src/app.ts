@@ -16,13 +16,13 @@ import "./models/associations";
 
 const app = express();
 
-const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 100,
-  message: "Too many requests from this IP, please try again later.",
-});
+// const limiter = rateLimit({
+//   windowMs: 15 * 60 * 1000,
+//   max: 100,
+//   message: "Too many requests from this IP, please try again later.",
+// });
 
-app.use(limiter);
+// app.use(limiter);
 app.use(helmet());
 app.use(cors({
   origin: CLIENT_URL, 

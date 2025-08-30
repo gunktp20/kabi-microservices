@@ -65,6 +65,16 @@ export class UserManager {
     return undefined;
   }
 
+  getUserConnectionsByUserId(userId: string): OnlineUser[] {
+    const userConnections: OnlineUser[] = [];
+    for (const user of this.onlineUsers.values()) {
+      if (user.userId === userId) {
+        userConnections.push(user);
+      }
+    }
+    return userConnections;
+  }
+
   getAllUsers(): OnlineUser[] {
     return Array.from(this.onlineUsers.values());
   }
